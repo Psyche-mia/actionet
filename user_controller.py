@@ -26,17 +26,31 @@ print("\nInstructions: " + instructions)
 
 # Record user data
 action_list = []
-name_list = []
+midtasks = []
 
 while True:
     # Add mid-level actions
+    temp1 =[]
+    midtask=['Navigate','Toast','Boil','Wash','Fry','Heat','Serve','Cook','Nill']
+    instructions1 ="0.Navigate 3.Wash 6.Serve\n" \
+                   "1.Toast    4.Fry  7.Cook\n" \
+                   "2.Boil     5.Heat 8.Finish\n"
+    print("Middle level tasks:")
+    print(instructions1)
     name = input("Name your action (enter 'Finish' if you have completed your task): ")
+    target =input("Target of your action: ")
+    middleleveltask= midtask[int(name)]
+    temp1.append(middleleveltask)
+    temp1.append(target)
 
+    print("Middle level Task: "+middleleveltask +target)
     # Task complete
-    if name == 'Finish':
+    if name == '8':
         with open("program1.txt","w") as output:
             # output.write(str(name_list))
             output.write(str(action_list))
+        with open("program2.txt","w") as output:
+            output.write(str(midtasks))
         print("Task complete.")
         break
 
@@ -88,7 +102,7 @@ while True:
         elif keyboard.is_pressed('end'):
             if len(temp) > 0:
                 action_list.append(temp)
-                name_list.append(name)
+                midtasks.append(temp1)
                 break
             else:
                 break
