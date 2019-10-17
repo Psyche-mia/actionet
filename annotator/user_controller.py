@@ -1,6 +1,13 @@
 import ai2thor.controller
 import keyboard
 import time
+import argparse
+
+# Get arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('-scene')
+parser.add_argument('-task')
+args = parser.parse_args()
 
 # Instantiate AI2-THOR
 controller = ai2thor.controller.Controller()
@@ -9,16 +16,13 @@ controller.start(player_screen_width=640,
 # controller1 = ai2thor.controller.Controller()
 # controller1.start()
 
-print("Floorplan:")
-floorplan= input('')
-controller.reset('FloorPlan'+floorplan)
+controller.reset('FloorPlan'+args.scene)
 event = controller.step(dict(action='Initialize', gridSize=0.25,renderObjectImage="True"))
 # controller1.reset('FloorPlan'+floorplan)
 # event = controller1.step(dict(action='Initialize', gridSize=0.25,renderObjectImage="True"))
 # Show user task details
 # event = controller1.step(dict(action='ToggleMapView'))
-task = "Make coffee"
-print ("Task: " + task)
+print ("Task: " + args.task)
 
 instructions = "Use arrows keys to move, 'WASD' to look around, 'esc' to abort a new action\n " \
                "'end'-to enter a new action | 'o'-open an object | 'u'-pick up an object\n" \
