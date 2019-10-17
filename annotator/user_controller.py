@@ -22,16 +22,6 @@ event = controller.step(dict(action='Initialize', gridSize=0.25,renderObjectImag
 # event = controller1.step(dict(action='Initialize', gridSize=0.25,renderObjectImage="True"))
 # Show user task details
 # event = controller1.step(dict(action='ToggleMapView'))
-print ("Task: " + args.task)
-
-instructions = "Use arrows keys to move, 'WASD' to look around, 'esc' to abort a new action\n " \
-               "'end'-to enter a new action | 'o'-open an object | 'u'-pick up an object\n" \
-               "'p'-put an object down | 't'-toggle on an object | 'f'-toggle off an object.\n" \
-               "'c'-close object | 'k'-throw object | 'i'-drop object\n" \
-               "'l' -push object | 'r' -pull object | 'z' -slice object\n" \
-               "'b' -break object | 'm' -dirty object | 'y' -clean object\n" \
-               "'g' -empty object | 'h' -fill object\n"
-print("\nInstructions: " + instructions)
 
 # Record user data
 action_list = []
@@ -42,11 +32,7 @@ while True:
     anglehand=0
     temp1 =[]
     midtask=['Navigate','Toast','Boil','Wash','Fry','Heat','Serve','Cook','Nill','Robotic control']
-    instructions1 ="0.Navigate 3.Wash 6.Serve 9.Robotic Control\n" \
-                   "1.Toast    4.Fry  7.Cook\n" \
-                   "2.Boil     5.Heat 8.Finish\n"
-    print("Middle level tasks:")
-    print(instructions1)
+    
     name = input("Name your action (enter 'Finish' if you have completed your task): ")
     target =input("Target of your action: ")
     middleleveltask= midtask[int(name)]
