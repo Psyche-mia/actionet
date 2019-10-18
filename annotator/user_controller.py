@@ -33,22 +33,20 @@ while True:
     temp1 =[]
     midtask=['Navigate','Toast','Boil','Wash','Fry','Heat','Serve','Cook','Nill','Robotic control']
     
-    name = input("Name your action (enter 'Finish' if you have completed your task): ")
     target =input("Target of your action: ")
-    middleleveltask= midtask[int(name)]
-    temp1.append(middleleveltask)
+    # temp1.append(middleleveltask)
     temp1.append(target)
 
-    print("Middle level Task: "+middleleveltask +target)
-    # Task complete
-    if name == '8':
-        with open("program1.txt","w") as output:
-            # output.write(str(name_list))
-            output.write(str(action_list))
-        with open("program2.txt","w") as output:
-            output.write(str(midtasks))
-        print("Task complete.")
-        break
+    # print("Middle level Task: "+middleleveltask +target)
+    # # Task complete
+    # if name == '8':
+    #     with open("program1.txt","w") as output:
+    #         # output.write(str(name_list))
+    #         output.write(str(action_list))
+    #     with open("program2.txt","w") as output:
+    #         output.write(str(midtasks))
+    #     print("Task complete.")
+    #     break
 
     temp = []
     while True:
