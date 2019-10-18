@@ -5,6 +5,7 @@ from PIL import Image, ImageTk
 import keyboard
 import threading
 import queue
+import time
 
 class Gui():
     """
@@ -115,9 +116,9 @@ class ChooseTaskPage(tk.Frame):
             frame = self.frame_queue.get(0)
             self.ai2thor_frame.configure(image=frame)
             self.ai2thor_frame.image = frame
-            self.after(1000, self.get_and_set_frame)
+            self.after(100, self.get_and_set_frame)
         except queue.Empty:
-            self.after(1000, self.get_and_set_frame)
+            self.after(100, self.get_and_set_frame)
 
 
 class ChooseActionPage(tk.Frame):
@@ -248,18 +249,18 @@ class DoActionPage(tk.Frame):
             frame = self.frame_queue.get(0)
             self.ai2thor_frame.configure(image=frame)
             self.ai2thor_frame.image = frame
-            self.after(10, self.get_and_set_frame)
+            self.after(5, self.get_and_set_frame)
         except queue.Empty:
-            self.after(20, self.get_and_set_frame)
+            self.after(5, self.get_and_set_frame)
 
     def get_and_set_metadata(self):
         """Get first metadata in the metadata_queue, if any, and set the GUI metadata to that metadata."""
         try:
             metadata = self.metadata_queue.get(0)
             self.ai2thor_metadata['text'] = metadata
-            self.after(10, self.get_and_set_metadata)
+            self.after(5, self.get_and_set_metadata)
         except queue.Empty:
-            self.after(20, self.get_and_set_metadata)
+            self.after(5, self.get_and_set_metadata)
         
 
 class DoInputPage(tk.Frame):
@@ -289,15 +290,18 @@ class AI2THOR():
         controller.start(player_screen_width=300,
                 player_screen_height=300)
 
-        start = False
+        choose_task = True
+        choose_action = False
+        do_action = False
+        do_input = False
 
-        # When user is choosing task, the user can view the scenes
-        while not start:
+        # Check for conditions
+        while choose_task:
             try:
                 scene = self.scene_queue.get(0)
 
                 if scene.startswith('START_'):
-                    start = True
+                    choose_task = False
                     # Ignore the characters 'START_'
                     scene = scene[6:]
                     controller.reset('FloorPlan'+scene)
@@ -320,70 +324,72 @@ class AI2THOR():
         action_list = []
         midtasks = []
 
-        while True:
-            # Add mid-level actions
-            anglehand=0
-            temp1 =[]
+        # while True:
+        #     # Add mid-level actions
+        #     anglehand=0
+        #     temp1 =[]
             
-            # Wait for action input
-            # target =input("Target of your action: ")
-            # temp1.append(middleleveltask)
-            # temp1.append(target)
+        #     # Wait for action input
+        #     # target =input("Target of your action: ")
+        #     # temp1.append(middleleveltask)
+        #     # temp1.append(target)
 
-            # print("Middle level Task: "+middleleveltask +target)
-            # # Task complete
-            # if name == '8':
-            #     with open("program1.txt","w") as output:
-            #         # output.write(str(name_list))
-            #         output.write(str(action_list))
-            #     with open("program2.txt","w") as output:
-            #         output.write(str(midtasks))
-            #     print("Task complete.")
-            #     break
+        #     # print("Middle level Task: "+middleleveltask +target)
+        #     # # Task complete
+        #     # if name == '8':
+        #     #     with open("program1.txt","w") as output:
+        #     #         # output.write(str(name_list))
+        #     #         output.write(str(action_list))
+        #     #     with open("program2.txt","w") as output:
+        #     #         output.write(str(midtasks))
+        #     #     print("Task complete.")
+        #     #     break
 
-            temp = []
-            while True:
-                anglehand=anglehand+30.0
-                if keyboard.is_pressed('right'):
-                    event = controller.step(dict(action='MoveRight'))
-                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
-                    # Send frame to GUI
-                    self.send_metadata(event.metadata['objects'])
-                    self.send_frame(ai2thor_frame)
-                    temp.append('MoveRight')
-                elif keyboard.is_pressed('up'):
-                    event = controller.step(dict(action='MoveAhead'))
-                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
-                    # Send frame to GUI
-                    self.send_metadata(event.metadata['objects'])
-                    self.send_frame(ai2thor_frame)
-                    temp.append('MoveAhead')
-                elif keyboard.is_pressed('down'):
-                    event = controller.step(dict(action='MoveBack'))
-                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
-                    # Send frame to GUI
-                    self.send_metadata(event.metadata['objects'])
-                    self.send_frame(ai2thor_frame)
-                    temp.append('MoveBack')
-                elif keyboard.is_pressed('left'):
-                    event = controller.step(dict(action='MoveLeft'))
-                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
-                    # Send frame to GUI
-                    self.send_metadata(event.metadata['objects'])
-                    self.send_frame(ai2thor_frame)
-                    temp.append('MoveLeft')
-                        # Finish mid-level action
-                elif keyboard.is_pressed('end'):
-                    if len(temp) > 0:
-                        action_list.append(temp)
-                        midtasks.append(temp1)
-                        break
-                    else:
-                        break
-                # Abort mid-level action
-                elif keyboard.is_pressed('esc'):
-                    # TODO: Revert to original attributes
+        temp = []
+        while True:
+            # Sleep to prevent this from being too fast
+            time.sleep(0.005)
+
+            if keyboard.is_pressed('right'):
+                event = controller.step(dict(action='MoveRight'))
+                ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                # Send frame to GUI
+                self.send_metadata(event.metadata['objects'])
+                self.send_frame(ai2thor_frame)
+                temp.append('MoveRight')
+            elif keyboard.is_pressed('up'):
+                event = controller.step(dict(action='MoveAhead'))
+                ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                # Send frame to GUI
+                self.send_metadata(event.metadata['objects'])
+                self.send_frame(ai2thor_frame)
+                temp.append('MoveAhead')
+            elif keyboard.is_pressed('down'):
+                event = controller.step(dict(action='MoveBack'))
+                ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                # Send frame to GUI
+                self.send_metadata(event.metadata['objects'])
+                self.send_frame(ai2thor_frame)
+                temp.append('MoveBack')
+            elif keyboard.is_pressed('left'):
+                event = controller.step(dict(action='MoveLeft'))
+                ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                # Send frame to GUI
+                self.send_metadata(event.metadata['objects'])
+                self.send_frame(ai2thor_frame)
+                temp.append('MoveLeft')
+            # Finish mid-level action
+            elif keyboard.is_pressed('end'):
+                if len(temp) > 0:
+                    action_list.append(temp)
+                    midtasks.append(temp1)
                     break
+                else:
+                    break
+            # Abort mid-level action
+            elif keyboard.is_pressed('esc'):
+                # TODO: Revert to original attributes
+                break
 
     def send_frame(self, frame):
         """Send frame to the frame_queue."""
