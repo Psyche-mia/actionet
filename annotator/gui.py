@@ -63,6 +63,11 @@ class ChooseTaskPage(tk.Frame):
 
         status['text'] = "STATUS: Choosing scene and task..."
 
+        # Show initial frame
+        self.ai2thor_frame = tk.Label(self)
+        self.get_and_set_frame()
+        self.ai2thor_frame.pack(side="top")
+
         # Select scene
         SCENES = [
             "1",
@@ -70,9 +75,9 @@ class ChooseTaskPage(tk.Frame):
             "3"
         ]
         scene_frame = tk.Frame(self)
-        scene_frame.pack(side="top", fill="both")
+        scene_frame.pack(side="top")
         scene_text = tk.Label(self, text="Choose scene:")
-        scene_text.pack(in_=scene_frame, side="left", fill="x")
+        scene_text.pack(in_=scene_frame, side="left")
         self.scene = tk.StringVar(self)
         self.scene.set(SCENES[0])
         self.scene_queue.put(SCENES[0])
@@ -82,21 +87,16 @@ class ChooseTaskPage(tk.Frame):
 
         # Select task
         TASKS = [
-            "Make coffee"
+            "Make Coffee"
         ]
         task_frame = tk.Frame(self)
-        task_frame.pack(side="top", fill="both")
+        task_frame.pack(side="top")
         task_text = tk.Label(self, text="Choose task:")
-        task_text.pack(in_=task_frame, side="left", fill="x")
+        task_text.pack(in_=task_frame, side="left")
         task = tk.StringVar(self)
         task.set(TASKS[0])
         task_options = tk.OptionMenu(self, task, *TASKS)
         task_options.pack(in_=task_frame, side="left")
-
-        # Show frame
-        self.ai2thor_frame = tk.Label(self)
-        self.get_and_set_frame()
-        self.ai2thor_frame.pack(side="top")
 
         # Create start task button
         choose_action = ChooseActionPage(root)
@@ -147,7 +147,12 @@ class ChooseActionPage(tk.Frame):
         ai2thor_frame.image = initial_frame
         ai2thor_frame.pack(side="top")
 
-        # TODO: Add text to show this is action choice
+        # Add text to show this is action choice
+        mid_action_frame = tk.Frame(self)
+        mid_action_frame.pack(side="top")
+        mid_action_text = tk.Label(self, text="Choose action:")
+        mid_action_text.pack(in_=mid_action_frame, side="left")
+
         # Show middle level actions
         MID_ACTIONS = [
             "Navigate",
@@ -164,13 +169,27 @@ class ChooseActionPage(tk.Frame):
         mid_actions = tk.StringVar(self)
         mid_actions.set(MID_ACTIONS[0])
         mid_actions_options = tk.OptionMenu(self, mid_actions, *MID_ACTIONS)
-        mid_actions_options.pack(side="top")
+        mid_actions_options.pack(in_=mid_action_frame, side="left")
 
-        # TODO: Add target object beside middle level action choice box
+        # Add text to show this is target object choice
+        objects_frame = tk.Frame(self)
+        objects_frame.pack(side="top")
+        objects_text = tk.Label(self, text="Choose target object:")
+        objects_text.pack(in_=objects_frame, side="left")
+
+        # Show possible target objects
+        OBJECTS = [
+            "Coffee"
+        ]
+        objects = tk.StringVar(self)
+        objects.set(OBJECTS[0])
+        objects_options = tk.OptionMenu(self, objects, *OBJECTS)
+        objects_options.pack(in_=objects_frame, side="left")
+
         # Create start action button
         do_action = DoActionPage(root)
         do_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        start_action_button = tk.Button(self, text="START ACTION", command= lambda: do_action.show(root, container, status, task, mid_actions.get(), scene, None, choose_action, do_action, None, scene_queue, frame_queue, metadata_queue, initial_frame))
+        start_action_button = tk.Button(self, text="START ACTION", command= lambda: do_action.show(root, container, status, task, mid_actions.get(), objects.get(), scene, None, choose_action, do_action, None, scene_queue, frame_queue, metadata_queue, initial_frame))
         start_action_button.pack(side="bottom", fill="x", expand=False)
 
         # Show page
@@ -181,7 +200,7 @@ class DoActionPage(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
 
-    def show(self, root, container, status, task, action, scene, choose_task, choose_action, do_action, do_input, scene_queue, frame_queue, metadata_queue, initial_frame):
+    def show(self, root, container, status, task, action, target_object, scene, choose_task, choose_action, do_action, do_input, scene_queue, frame_queue, metadata_queue, initial_frame):
         # Clear unused pages
         if choose_action != None:
             choose_action.destroy()
@@ -193,29 +212,19 @@ class DoActionPage(tk.Frame):
         self.frame_queue = frame_queue
         self.metadata_queue = metadata_queue
 
-        # TODO: Add button to abort action
-        # TODO: Add button to finish action
-
         # Show status
-        status['text'] = "STATUS: Doing middle level action '" + action + "' for '" + task + "' task..."
-
-        # Instruction
-        instruction = "\nINSTRUCTIONS:\n "\
-               "Use arrows keys to move, 'WASD' to look around, 'esc' to abort a new action\n " \
-               "'end'-to enter a new action | 'o'-open an object | 'u'-pick up an object\n" \
-               "'p'-put an object down | 't'-toggle on an object | 'f'-toggle off an object.\n" \
-               "'c'-close object | 'k'-throw object | 'i'-drop object\n" \
-               "'l' -push object | 'r' -pull object | 'z' -slice object\n" \
-               "'b' -break object | 'm' -dirty object | 'y' -clean object\n" \
-               "'g' -empty object | 'h' -fill object\n"
-        instruction_label = tk.Label(self, text=instruction)
-        instruction_label.pack(side="top")
+        status['text'] = "STATUS: Doing middle level action '" + action + target_object + "' for '" + task + "' task..."
 
         # Show frame(s)
         self.ai2thor_frame = tk.Label(self)
         self.ai2thor_frame.configure(image=initial_frame)
         self.ai2thor_frame.image = initial_frame
         self.ai2thor_frame.pack(side="top")
+
+        # Instruction
+        instruction = "\nINSTRUCTIONS: Use arrows keys to move, 'WASD' to look around\n"
+        instruction_label = tk.Label(self, text=instruction)
+        instruction_label.pack(side="top")
 
         # Show metadata
         self.ai2thor_metadata = tk.Label(self)
@@ -224,17 +233,16 @@ class DoActionPage(tk.Frame):
         # Create finish task button --> make sure at least one action in middle level action
         choose_task = ChooseTaskPage(root)
         choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        self.finish_task_button = tk.Button(self, text="----- FINISH TASK -----", command= lambda: choose_task.show(root, container, status, choose_task, None, do_action, None, scene_queue, frame_queue, metadata_queue))
+        self.finish_task_button = tk.Button(self, text="--------------- FINISH TASK ---------------", command= lambda: choose_task.show(root, container, status, choose_task, None, do_action, None, scene_queue, frame_queue, metadata_queue))
         self.finish_task_button.pack(side="bottom", fill="x", expand=False)
 
-        # # Create finish action button
+        # Create finish action button
         choose_action = ChooseActionPage(root)
         choose_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
         self.finish_action_button = tk.Button(self, text="FINISH ACTION", command= lambda: choose_action.show(root, container, status, task, scene, choose_task, choose_action, do_action, None, scene_queue, frame_queue, metadata_queue, self.ai2thor_frame.image))
         self.finish_action_button.pack(side="bottom", fill="x", expand=False)
 
-        # # Create abort action button
-        # # TODO: Make this work
+        # TODO: Create abort action button
         # self.abort_action_button = tk.Button(self, text="ABORT ACTION", command= lambda: do_action())
         # self.abort_action_button.pack(side="bottom", fill="x", expand=False)
         
@@ -268,8 +276,16 @@ class DoInputPage(tk.Frame):
         tk.Frame.__init__(self, *args, **kwargs)
 
     def show(self, root, action_type):
-        # TODO: Show appropriate object choices for base action choice
-        # TODO: Stop keyboard from running
+        # TODO: Show all appropriate buttons
+        #  'o'-open an object | 'u'-pick up an object\n" \
+        #        "'p'-put an object down | 't'-toggle on an object | 'f'-toggle off an object.\n" \
+        #        "'c'-close object | 'k'-throw object | 'i'-drop object\n" \
+        #        "'l' -push object | 'r' -pull object | 'z' -slice object\n" \
+        #        "'b' -break object | 'm' -dirty object | 'y' -clean object\n" \
+        #        "'g' -empty object | 'h' -fill object\n"
+
+        # TODO: Show appropriate object choices in OptionsMenu
+        # TODO: Pause keyboard
         
         self.lift()
 
