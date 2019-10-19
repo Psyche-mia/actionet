@@ -14,7 +14,7 @@ class Gui():
     def __init__(self, root):
         """Initialise GUI."""
         # Create queues
-        # TODO: Create remaining queues
+        stage_queue = queue.Queue()
         scene_queue = queue.Queue()
         frame_queue = queue.Queue()
         metadata_queue = queue.Queue()
@@ -28,14 +28,14 @@ class Gui():
         container.pack(side="top", fill="both", expand=True)
 
         # Instantiate AI2-THOR with queues
-        ai2_thor = AI2THOR(scene_queue, frame_queue, metadata_queue)
+        ai2_thor = AI2THOR(stage_queue, scene_queue, frame_queue, metadata_queue)
         ai2_thor_thread = threading.Thread(target=lambda: ai2_thor.run())
         ai2_thor_thread.start()
 
         # Set initial page to choose task page
         choose_task = ChooseTaskPage(root)
         choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        choose_task.show(root, container, status, choose_task, None, None, None, scene_queue, frame_queue, metadata_queue)
+        choose_task.show(root, container, status, choose_task, None, None, None, stage_queue, scene_queue, frame_queue, metadata_queue)
 
 
 class ChooseTaskPage(tk.Frame):
@@ -45,7 +45,7 @@ class ChooseTaskPage(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
 
-    def show(self, root, container, status, choose_task, choose_action, do_action, do_input, scene_queue, frame_queue, metadata_queue):
+    def show(self, root, container, status, choose_task, choose_action, do_action, do_input, stage_queue, scene_queue, frame_queue, metadata_queue):
         # Clear unused pages
         if choose_action != None:
             choose_action.destroy()
@@ -54,6 +54,7 @@ class ChooseTaskPage(tk.Frame):
         if do_input != None:
             do_input.destroy()
 
+        stage_queue.put('choose_task')
         self.scene_queue = scene_queue
         self.frame_queue = frame_queue
 
@@ -61,7 +62,7 @@ class ChooseTaskPage(tk.Frame):
         # TODO: Create middle level actions + target list
         # TODO: Create base actions list
 
-        status['text'] = "STATUS: Choosing scene and task..."
+        status['text'] = "STATUS: Choosing scene and task...\n"
 
         # Show initial frame
         self.ai2thor_frame = tk.Label(self)
@@ -101,7 +102,7 @@ class ChooseTaskPage(tk.Frame):
         # Create start task button
         choose_action = ChooseActionPage(root)
         choose_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        start_button = tk.Button(self, text="START TASK", command= lambda: choose_action.show(root, container, status, task.get(), 'START_'+self.scene.get(), choose_task, choose_action, None, None, scene_queue, frame_queue, metadata_queue, self.ai2thor_frame.image))
+        start_button = tk.Button(self, text="START TASK", command= lambda: choose_action.show(root, container, status, task.get(), self.scene.get(), choose_task, choose_action, None, None, stage_queue, scene_queue, frame_queue, metadata_queue, self.ai2thor_frame.image))
         start_button.pack(side="bottom", fill="x", expand=False)
 
         self.lift()
@@ -125,7 +126,8 @@ class ChooseActionPage(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
 
-    def show(self, root, container, status, task, scene, choose_task, choose_action, do_action, do_input, scene_queue, frame_queue, metadata_queue, initial_frame):
+    def show(self, root, container, status, task, scene, choose_task, choose_action, do_action, do_input, stage_queue, scene_queue, frame_queue, metadata_queue, initial_frame):
+        """Show information for action."""
         # Clear unused pages
         if choose_task != None:
             choose_task.destroy()
@@ -133,13 +135,12 @@ class ChooseActionPage(tk.Frame):
             do_action.destroy()
         if do_input != None:
             do_input.destroy()
-        
-        """Show information for action."""
+
+        stage_queue.put('choose_action')
         scene_queue.put(scene)
-        scene = scene[6:]
 
         # Show status
-        status['text'] = "STATUS: Choosing new middle level action for '" + task + "' task for scene " + scene + "..."
+        status['text'] = "STATUS: Choosing next middle level action for '" + task + "' task for scene " + scene + "...\n"
 
         # Show initial frame
         ai2thor_frame = tk.Label(self)
@@ -189,7 +190,7 @@ class ChooseActionPage(tk.Frame):
         # Create start action button
         do_action = DoActionPage(root)
         do_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        start_action_button = tk.Button(self, text="START ACTION", command= lambda: do_action.show(root, container, status, task, mid_actions.get(), objects.get(), scene, None, choose_action, do_action, None, scene_queue, frame_queue, metadata_queue, initial_frame))
+        start_action_button = tk.Button(self, text="START ACTION", command= lambda: do_action.show(root, container, status, task, mid_actions.get(), objects.get(), scene, None, choose_action, do_action, None, stage_queue, scene_queue, frame_queue, metadata_queue, initial_frame))
         start_action_button.pack(side="bottom", fill="x", expand=False)
 
         # Show page
@@ -200,7 +201,7 @@ class DoActionPage(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
 
-    def show(self, root, container, status, task, action, target_object, scene, choose_task, choose_action, do_action, do_input, scene_queue, frame_queue, metadata_queue, initial_frame):
+    def show(self, root, container, status, task, action, target_object, scene, choose_task, choose_action, do_action, do_input, stage_queue, scene_queue, frame_queue, metadata_queue, initial_frame):
         # Clear unused pages
         if choose_action != None:
             choose_action.destroy()
@@ -209,11 +210,12 @@ class DoActionPage(tk.Frame):
         if do_input != None:
             do_input.destroy()
 
+        stage_queue.put('do_action')
         self.frame_queue = frame_queue
         self.metadata_queue = metadata_queue
 
         # Show status
-        status['text'] = "STATUS: Doing middle level action '" + action + target_object + "' for '" + task + "' task..."
+        status['text'] = "STATUS: Doing middle level action '" + action + target_object + "' for '" + task + "' task...\n"
 
         # Show frame(s)
         self.ai2thor_frame = tk.Label(self)
@@ -233,13 +235,13 @@ class DoActionPage(tk.Frame):
         # Create finish task button --> make sure at least one action in middle level action
         choose_task = ChooseTaskPage(root)
         choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        self.finish_task_button = tk.Button(self, text="--------------- FINISH TASK ---------------", command= lambda: choose_task.show(root, container, status, choose_task, None, do_action, None, scene_queue, frame_queue, metadata_queue))
+        self.finish_task_button = tk.Button(self, text="--------------- FINISH TASK ---------------", command= lambda: choose_task.show(root, container, status, choose_task, None, do_action, None, stage_queue, scene_queue, frame_queue, metadata_queue))
         self.finish_task_button.pack(side="bottom", fill="x", expand=False)
 
         # Create finish action button
         choose_action = ChooseActionPage(root)
         choose_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        self.finish_action_button = tk.Button(self, text="FINISH ACTION", command= lambda: choose_action.show(root, container, status, task, scene, choose_task, choose_action, do_action, None, scene_queue, frame_queue, metadata_queue, self.ai2thor_frame.image))
+        self.finish_action_button = tk.Button(self, text="FINISH ACTION", command= lambda: choose_action.show(root, container, status, task, scene, choose_task, choose_action, do_action, None, stage_queue, scene_queue, frame_queue, metadata_queue, self.ai2thor_frame.image))
         self.finish_action_button.pack(side="bottom", fill="x", expand=False)
 
         # TODO: Create abort action button
@@ -285,7 +287,6 @@ class DoInputPage(tk.Frame):
         #        "'g' -empty object | 'h' -fill object\n"
 
         # TODO: Show appropriate object choices in OptionsMenu
-        # TODO: Pause keyboard
         
         self.lift()
 
@@ -295,7 +296,8 @@ class DoInputPage(tk.Frame):
 
 
 class AI2THOR():
-    def __init__(self, scene_queue, frame_queue, metadata_queue):
+    def __init__(self, stage_queue, scene_queue, frame_queue, metadata_queue):
+        self.stage_queue = stage_queue
         self.scene_queue = scene_queue
         self.frame_queue = frame_queue
         self.metadata_queue = metadata_queue
@@ -306,106 +308,85 @@ class AI2THOR():
         controller.start(player_screen_width=300,
                 player_screen_height=300)
 
-        choose_task = True
-        choose_action = False
-        do_action = False
-        do_input = False
+        # Set initial stage to None
+        stage = None
 
-        # Check for conditions
-        while choose_task:
-            try:
-                scene = self.scene_queue.get(0)
-
-                if scene.startswith('START_'):
-                    choose_task = False
-                    # Ignore the characters 'START_'
-                    scene = scene[6:]
-                    controller.reset('FloorPlan'+scene)
-                    event = controller.step(dict(action='Initialize', gridSize=0.25,renderObjectImage="True"))
-                
-                    # Send frame to GUI
-                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
-                    self.send_frame(ai2thor_frame)
-                elif scene != None:
-                    controller.reset('FloorPlan'+scene)
-                    event = controller.step(dict(action='Initialize', gridSize=0.25,renderObjectImage="True"))
-                
-                    # Send frame to GUI
-                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
-                    self.send_frame(ai2thor_frame)
-            except queue.Empty:
-                continue
-
-        # Record user data
-        action_list = []
-        midtasks = []
-
-        # while True:
-        #     # Add mid-level actions
-        #     anglehand=0
-        #     temp1 =[]
-            
-        #     # Wait for action input
-        #     # target =input("Target of your action: ")
-        #     # temp1.append(middleleveltask)
-        #     # temp1.append(target)
-
-        #     # print("Middle level Task: "+middleleveltask +target)
-        #     # # Task complete
-        #     # if name == '8':
-        #     #     with open("program1.txt","w") as output:
-        #     #         # output.write(str(name_list))
-        #     #         output.write(str(action_list))
-        #     #     with open("program2.txt","w") as output:
-        #     #         output.write(str(midtasks))
-        #     #     print("Task complete.")
-        #     #     break
-
-        temp = []
         while True:
+            # Check which stage the user is at
+
             # Sleep to prevent this from being too fast
             time.sleep(0.005)
 
-            if keyboard.is_pressed('right'):
-                event = controller.step(dict(action='MoveRight'))
-                ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
-                # Send frame to GUI
-                self.send_metadata(event.metadata['objects'])
-                self.send_frame(ai2thor_frame)
-                temp.append('MoveRight')
-            elif keyboard.is_pressed('up'):
-                event = controller.step(dict(action='MoveAhead'))
-                ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
-                # Send frame to GUI
-                self.send_metadata(event.metadata['objects'])
-                self.send_frame(ai2thor_frame)
-                temp.append('MoveAhead')
-            elif keyboard.is_pressed('down'):
-                event = controller.step(dict(action='MoveBack'))
-                ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
-                # Send frame to GUI
-                self.send_metadata(event.metadata['objects'])
-                self.send_frame(ai2thor_frame)
-                temp.append('MoveBack')
-            elif keyboard.is_pressed('left'):
-                event = controller.step(dict(action='MoveLeft'))
-                ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
-                # Send frame to GUI
-                self.send_metadata(event.metadata['objects'])
-                self.send_frame(ai2thor_frame)
-                temp.append('MoveLeft')
-            # Finish mid-level action
-            elif keyboard.is_pressed('end'):
+            # Try to get stage from stage_queue
+            try:
+                stage = self.stage_queue.get(0)
+            except queue.Empty:
+                pass
+
+            if stage == 'choose_task':
+                try:
+                    scene = self.scene_queue.get(0)
+
+                    controller.reset('FloorPlan'+scene)
+                    event = controller.step(dict(action='Initialize', gridSize=0.25,renderObjectImage="True"))
+                
+                    # Send frame to GUI
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+
+                    # Reset user inputs
+                    action_list = []
+                    midtasks = []
+                    temp = []
+                    temp1 = []
+                except queue.Empty:
+                    continue
+            elif stage == 'choose_action':
+                pass
+            elif stage == 'do_action':
+                if keyboard.is_pressed('right'):
+                    event = controller.step(dict(action='MoveRight'))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    # Send frame to GUI
+                    self.send_metadata(event.metadata['objects'])
+                    self.send_frame(ai2thor_frame)
+                    temp.append('MoveRight')
+                elif keyboard.is_pressed('up'):
+                    event = controller.step(dict(action='MoveAhead'))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    # Send frame to GUI
+                    self.send_metadata(event.metadata['objects'])
+                    self.send_frame(ai2thor_frame)
+                    temp.append('MoveAhead')
+                elif keyboard.is_pressed('down'):
+                    event = controller.step(dict(action='MoveBack'))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    # Send frame to GUI
+                    self.send_metadata(event.metadata['objects'])
+                    self.send_frame(ai2thor_frame)
+                    temp.append('MoveBack')
+                elif keyboard.is_pressed('left'):
+                    event = controller.step(dict(action='MoveLeft'))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    # Send frame to GUI
+                    self.send_metadata(event.metadata['objects'])
+                    self.send_frame(ai2thor_frame)
+                    temp.append('MoveLeft')
+            elif stage == 'do_input':
+                pass
+            elif stage == 'end_action':
+                # TODO: Update lists
                 if len(temp) > 0:
                     action_list.append(temp)
                     midtasks.append(temp1)
-                    break
-                else:
-                    break
-            # Abort mid-level action
-            elif keyboard.is_pressed('esc'):
-                # TODO: Revert to original attributes
-                break
+            elif stage == 'end_task':
+                # TODO: Save lists
+                # with open("program1.txt","w") as output:
+                #     output.write(str(name_list))
+                #     output.write(str(action_list))
+                # with open("program2.txt","w") as output:
+                #     output.write(str(midtasks))
+                pass
 
     def send_frame(self, frame):
         """Send frame to the frame_queue."""
