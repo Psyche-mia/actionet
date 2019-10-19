@@ -346,32 +346,65 @@ class AI2THOR():
             elif stage == 'do_action':
                 if keyboard.is_pressed('right'):
                     event = controller.step(dict(action='MoveRight'))
-                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     # Send frame to GUI
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_metadata(event.metadata['objects'])
                     self.send_frame(ai2thor_frame)
                     temp.append('MoveRight')
                 elif keyboard.is_pressed('up'):
                     event = controller.step(dict(action='MoveAhead'))
-                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     # Send frame to GUI
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_metadata(event.metadata['objects'])
                     self.send_frame(ai2thor_frame)
                     temp.append('MoveAhead')
                 elif keyboard.is_pressed('down'):
                     event = controller.step(dict(action='MoveBack'))
-                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     # Send frame to GUI
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_metadata(event.metadata['objects'])
                     self.send_frame(ai2thor_frame)
                     temp.append('MoveBack')
                 elif keyboard.is_pressed('left'):
                     event = controller.step(dict(action='MoveLeft'))
-                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     # Send frame to GUI
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_metadata(event.metadata['objects'])
                     self.send_frame(ai2thor_frame)
                     temp.append('MoveLeft')
+                elif keyboard.is_pressed('a'):
+                    position=event.metadata['agent']['position']
+                    rotation=event.metadata['agent']['rotation']
+                    event = controller.step(dict(action='TeleportFull', x=position.get('x'), y=position.get('y'), z=position.get('z'), rotation=rotation.get('y')-30.0, horizon=0.0))
+                    # Send frame to GUI
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_metadata(event.metadata['objects'])
+                    self.send_frame(ai2thor_frame)
+                    temp.append('RotateLeft')
+                elif keyboard.is_pressed('d'):
+                    position=event.metadata['agent']['position']
+                    rotation= event.metadata['agent']['rotation']
+                    event = controller.step(dict(action='TeleportFull', x=position.get('x'), y=position.get('y'), z=position.get('z'), rotation=rotation.get('y')+30.0, horizon=0.0))
+                    # Send frame to GUI
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_metadata(event.metadata['objects'])
+                    self.send_frame(ai2thor_frame)
+                    temp.append('RotateRight')
+                    print(rotation)
+                elif keyboard.is_pressed('w'):
+                    event = controller.step(dict(action='LookUp'))
+                    # Send frame to GUI
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_metadata(event.metadata['objects'])
+                    self.send_frame(ai2thor_frame)
+                    temp.append('LookUp')
+                elif keyboard.is_pressed('s'):
+                    event = controller.step(dict(action='LookDown'))
+                    # Send frame to GUI
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_metadata(event.metadata['objects'])
+                    self.send_frame(ai2thor_frame)
+                    temp.append('LookDown')
             elif stage == 'do_input':
                 pass
             elif stage == 'end_action':
