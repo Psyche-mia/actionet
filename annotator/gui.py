@@ -140,7 +140,7 @@ class ChooseActionPage(tk.Frame):
         scene_queue.put(scene)
 
         # Show status
-        status['text'] = "STATUS: Choosing next middle level action for '" + task + "' task for scene " + scene + "...\n"
+        status['text'] = "STATUS: Choosing next action for '" + task + "' task in scene " + scene + "...\n"
 
         # Show initial frame
         ai2thor_frame = tk.Label(self)
@@ -213,9 +213,10 @@ class DoActionPage(tk.Frame):
         stage_queue.put('do_action')
         self.frame_queue = frame_queue
         self.metadata_queue = metadata_queue
+        self.stage_queue = stage_queue
 
         # Show status
-        status['text'] = "STATUS: Doing middle level action '" + action + target_object + "' for '" + task + "' task...\n"
+        status['text'] = "STATUS: Moving for '" + action + target_object + "' action for '" + task + "' task in scene " + scene + "...\n"
 
         # Show frame(s)
         self.ai2thor_frame = tk.Label(self)
@@ -228,21 +229,23 @@ class DoActionPage(tk.Frame):
         instruction_label = tk.Label(self, text=instruction)
         instruction_label.pack(side="top")
 
-        # Show metadata
-        self.ai2thor_metadata = tk.Label(self)
-        self.ai2thor_metadata.pack(side="top")
+        # Object interaction button
+        do_input = DoInputPage(root)
+        do_input.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+        object_interaction_button = tk.Button(self, text="Interact with an object", command= lambda: do_input.show(root, container, status, task, action, target_object, scene, None, None, do_action, do_input, stage_queue, scene_queue, frame_queue, metadata_queue, self.ai2thor_frame.image))
+        object_interaction_button.pack(side="top", expand=False)
 
         # Create finish task button --> make sure at least one action in middle level action
         choose_task = ChooseTaskPage(root)
         choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        self.finish_task_button = tk.Button(self, text="--------------- FINISH TASK ---------------", command= lambda: choose_task.show(root, container, status, choose_task, None, do_action, None, stage_queue, scene_queue, frame_queue, metadata_queue))
-        self.finish_task_button.pack(side="bottom", fill="x", expand=False)
+        finish_task_button = tk.Button(self, text="--------------- FINISH TASK ---------------", command= lambda: choose_task.show(root, container, status, choose_task, None, do_action, do_input, stage_queue, scene_queue, frame_queue, metadata_queue))
+        finish_task_button.pack(side="bottom", fill="x", expand=False)
 
         # Create finish action button
         choose_action = ChooseActionPage(root)
         choose_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        self.finish_action_button = tk.Button(self, text="FINISH ACTION", command= lambda: choose_action.show(root, container, status, task, scene, choose_task, choose_action, do_action, None, stage_queue, scene_queue, frame_queue, metadata_queue, self.ai2thor_frame.image))
-        self.finish_action_button.pack(side="bottom", fill="x", expand=False)
+        finish_action_button = tk.Button(self, text="FINISH ACTION", command= lambda: choose_action.show(root, container, status, task, scene, choose_task, choose_action, do_action, do_input, stage_queue, scene_queue, frame_queue, metadata_queue, self.ai2thor_frame.image))
+        finish_action_button.pack(side="bottom", fill="x", expand=False)
 
         # TODO: Create abort action button
         # self.abort_action_button = tk.Button(self, text="ABORT ACTION", command= lambda: do_action())
@@ -251,7 +254,6 @@ class DoActionPage(tk.Frame):
         self.lift()
 
         self.get_and_set_frame()
-        self.get_and_set_metadata()
 
     def get_and_set_frame(self):
         """Get first frame in the frame_queue, if any, and set the GUI frame to that frame."""
@@ -263,35 +265,94 @@ class DoActionPage(tk.Frame):
         except queue.Empty:
             self.after(5, self.get_and_set_frame)
 
-    def get_and_set_metadata(self):
-        """Get first metadata in the metadata_queue, if any, and set the GUI metadata to that metadata."""
-        try:
-            metadata = self.metadata_queue.get(0)
-            self.ai2thor_metadata['text'] = metadata
-            self.after(5, self.get_and_set_metadata)
-        except queue.Empty:
-            self.after(5, self.get_and_set_metadata)
+    def send_input_action(self, input_action, object):
+        self.stage_queue.send('do_input')
+        self.input_action_queue = None
+        self.input_action_queue.send("LOL")
         
 
 class DoInputPage(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
 
-    def show(self, root, action_type):
-        # TODO: Show all appropriate buttons
-        #  'o'-open an object | 'u'-pick up an object\n" \
-        #        "'p'-put an object down | 't'-toggle on an object | 'f'-toggle off an object.\n" \
-        #        "'c'-close object | 'k'-throw object | 'i'-drop object\n" \
-        #        "'l' -push object | 'r' -pull object | 'z' -slice object\n" \
-        #        "'b' -break object | 'm' -dirty object | 'y' -clean object\n" \
-        #        "'g' -empty object | 'h' -fill object\n"
+    def show(self, root, container, status, task, action, target_object, scene, choose_task, choose_action, do_action, do_input, stage_queue, scene_queue, frame_queue, metadata_queue, initial_frame):
+        # Clear unused pages
+        if choose_action != None:
+            choose_action.destroy()
+        if choose_task != None:
+            choose_task.destroy()
+        if do_action != None:
+            do_action.destroy()
 
-        # TODO: Show appropriate object choices in OptionsMenu
+        # Send stage update to AI2-THOR
+        stage_queue.put('do_input')
+
+        # Change status
+        status['text'] = "STATUS: Interacting with object for '" + action + target_object + "' action for '" + task + "' task in scene " + scene + "...\n"
+
+        # Show initial frame
+        self.ai2thor_frame = tk.Label(self)
+        self.ai2thor_frame.configure(image=initial_frame)
+        self.ai2thor_frame.image = initial_frame
+        self.ai2thor_frame.pack(side="top")
+
+        # Show interaction action choices
+        input_action_frame = tk.Frame(self)
+        input_action_frame.pack(side="top")
+        input_action_text = tk.Label(self, text="Choose interaction:")
+        input_action_text.pack(in_=input_action_frame, side="left")
+
+        INPUT_ACTIONS = [
+            "Open",
+            "Pick up",
+            "Put down",
+            "Toggle on",
+            "Toggle off",
+            "Close",
+            "Throw",
+            "Drop",
+            "Push",
+            "Pull",
+            "Slice",
+            "Break",
+            "Dirty",
+            "Clean",
+            "Empty",
+            "Fill"
+        ]
+        input_actions = tk.StringVar(self)
+        input_actions.set(INPUT_ACTIONS[0])
+        input_actions_options = tk.OptionMenu(self, input_actions, *INPUT_ACTIONS)
+        input_actions_options.pack(in_=input_action_frame, side="left")
+
+        # Show possible target objects
+        target_object_frame = tk.Frame(self)
+        target_object_frame.pack(side="top")
+        target_object_text = tk.Label(self, text="Choose target object:")
+        target_object_text.pack(in_=target_object_frame, side="left")
+
+        # TODO: Get list of objects from AI2-THOR
+        # self.get_and_set_object_choices()
+        OBJECTS = [
+            "Coffee"
+        ]
+        objects = tk.StringVar(self)
+        objects.set(OBJECTS[0])
+        objects_options = tk.OptionMenu(self, objects, *OBJECTS)
+        objects_options.pack(in_=target_object_frame, side="left")
+
+        # TODO: Show emphasis on selected object to let user know which object is selected
         
         self.lift()
 
-    def get_and_set_choices(self):
-        # Show list of object choices
+    def get_and_set_object_choices(self):
+        # TODO: Get list of object choices
+    #     try:
+    #         metadata = self.object_queue.get(0)
+    #         self.ai2thor_metadata['text'] = metadata
+    #         self.after(100, self.get_and_set_object_choices)
+    #     except queue.Empty:
+    #         self.after(100, self.get_and_set_object_choices)
         pass
 
 
