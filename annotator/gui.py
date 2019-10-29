@@ -24,6 +24,8 @@ class Gui():
         frame_queue = queue.Queue()
         object_queue = queue.Queue()
         input_queue = queue.Queue()
+        temp=[]
+
 
         # Show status
         status = tk.Label(root, text="STATUS: Choosing scene and task...")
@@ -34,7 +36,7 @@ class Gui():
         container.pack(side="top", fill="both", expand=True)
 
         # Instantiate AI2-THOR with queues
-        ai2_thor = AI2THOR(stage_queue, scene_queue, frame_queue, object_queue, input_queue)
+        ai2_thor = AI2THOR(stage_queue, scene_queue, frame_queue, object_queue, input_queue,temp)
         ai2_thor_thread = threading.Thread(target=lambda: ai2_thor.run())
         ai2_thor_thread.start()
 
@@ -78,12 +80,14 @@ class ChooseTaskPage(tk.Frame):
         self.get_and_set_frame()
         self.ai2thor_frame.pack(side="top")
 
+
         # Select scene
         SCENES = [
             "1",
             "2",
             "4",
             "5",
+            "28",
             "7"
         ]
         scene_frame = tk.Frame(self)
@@ -96,6 +100,7 @@ class ChooseTaskPage(tk.Frame):
         self.scene.trace("w", self.send_scene)
         scene_options = Combobox(self, textvariable=self.scene, state="readonly", values=SCENES)
         scene_options.pack(in_=scene_frame, side="left")
+
 
         # Select task
         TASKS = [
@@ -129,7 +134,10 @@ class ChooseTaskPage(tk.Frame):
                                                                     None, stage_queue, scene_queue, frame_queue,
                                                                     object_queue, input_queue,
                                                                     self.ai2thor_frame.image))
+
+
         start_button.pack(side="bottom", fill="x", expand=False)
+
 
         self.lift()
 
@@ -216,7 +224,7 @@ class ChooseActionPage(tk.Frame):
         objects_text = tk.Label(self, text="Choose target object:")
         objects_text.pack(in_=objects_frame, side="left")
 
-        f = open("program1.txt", "r")
+        f = open("description.txt", "r")
         contents = f.read()
 
         instruction = "\nINSTRUCTIONS:" + contents
@@ -239,7 +247,8 @@ class ChooseActionPage(tk.Frame):
                                                                        objects.get(), scene, None, choose_action,
                                                                        do_action, None, stage_queue, scene_queue,
                                                                        frame_queue, object_queue, input_queue,
-                                                                       initial_frame))
+                                                                       initial_frame,))
+
         start_action_button.pack(side="bottom", fill="x", expand=False)
 
         # Show page
@@ -281,7 +290,7 @@ class DoActionPage(tk.Frame):
         self.ai2thor_frame.pack(side="top")
 
         # Instruction
-        f = open("program1.txt", "r")
+        f = open("description.txt", "r")
         contents = f.read()
 
         instruction = "\nINSTRUCTIONS:" + contents
@@ -290,11 +299,29 @@ class DoActionPage(tk.Frame):
         load = Image.open("keyboard control.png")
         load = load.resize((820,230))
         render = ImageTk.PhotoImage(load)
+        clock = Label(self)
+        clock.pack(side="bottom")
+
+        def tick():
+            global time1
+            # get the current local time from the PC
+            time2 = time.strftime('%H:%M:%S')
+            # if time string has changed, update it
+            if time2 != time1:
+                time1 = time2
+                clock.config(text="Time:"+time2)
+            # calls itself every 200 milliseconds
+            # to update the time display as needed
+            # could use >200 ms, but display gets jerky
+            clock.after(200, tick)
+
+        tick()
+
 
         # labels can be text or images
         img = Label(self, image=render)
         img.image = render
-        img.place(x=0, y=460)
+        img.place(x=0, y=450)
 
 
         # Object interaction button
@@ -314,7 +341,7 @@ class DoActionPage(tk.Frame):
         finish_task_button = tk.Button(self, text="--------------- FINISH TASK ---------------",
                                        command=lambda: choose_task.show(root, container, status, choose_task, None,
                                                                         do_action, do_input, stage_queue, scene_queue,
-                                                                        frame_queue, object_queue, input_queue))
+                                                                        frame_queue, object_queue, input_queue,))
         finish_task_button.pack(side="bottom", fill="x", expand=False)
 
         # Create finish action button --> TODO: make sure at least one action in middle level action
@@ -412,11 +439,15 @@ class DoInputPage(tk.Frame):
         input_actions_options = Combobox(self, textvariable=self.input_actions, state="readonly", values=INPUT_ACTIONS)
         input_actions_options.pack(in_=input_action_frame, side="left")
 
+
+
         # Show possible target objects
         self.target_object_frame = tk.Frame(self)
         self.target_object_frame.pack(side="top")
         self.target_object_text = tk.Label(self, text="Choose target object:")
         self.target_object_text.pack(in_=self.target_object_frame, side="left")
+
+
 
 
 
@@ -426,12 +457,29 @@ class DoInputPage(tk.Frame):
         self.put_down_target_object_text = tk.Label(self, text="Choose location:")
         self.put_down_target_object_text.pack(in_=self.put_down_target_object_frame, side="left")
         self.put_down_target_object_frame.pack_forget()
-        f = open("program1.txt", "r")
+        f = open("description.txt", "r")
         contents = f.read()
 
         instruction = "\nINSTRUCTIONS:" + contents
         instruction_label = tk.Label(self, text=instruction)
         instruction_label.pack(side="bottom")
+        clock = Label(self)
+        clock.pack(side="bottom")
+
+        def tick():
+            global time1
+            # get the current local time from the PC
+            time2 = time.strftime('%H:%M:%S')
+            # if time string has changed, update it
+            if time2 != time1:
+                time1 = time2
+                clock.config(text="Time:" + time2)
+            # calls itself every 200 milliseconds
+            # to update the time display as needed
+            # could use >200 ms, but display gets jerky
+            clock.after(200, tick)
+
+        tick()
         LIQUIDS = [
             'coffee',
             'water',
@@ -466,7 +514,6 @@ class DoInputPage(tk.Frame):
         self.object_locations.set(OBJECTS[0])
         objects_location_options = Combobox(self, textvariable=self.object_locations, state="readonly", values=OBJECTS)
         objects_location_options.pack(in_=self.put_down_target_object_frame, side="left")
-
         # Create finish interaction button
         do_action = DoActionPage(root)
         do_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
@@ -481,6 +528,7 @@ class DoInputPage(tk.Frame):
                                                                                         self.objects.get(),
                                                                                         liquids.get(),
                                                                                         self.object_locations.get()))
+
         finish_action_button.pack(side="bottom", fill="x", expand=False)
 
         self.get_and_set_frame()
@@ -538,7 +586,9 @@ class DoInputPage(tk.Frame):
 
 
 class AI2THOR():
-    def __init__(self, stage_queue, scene_queue, frame_queue, object_queue, input_queue):
+
+    def __init__(self, stage_queue, scene_queue, frame_queue, object_queue, input_queue,temp):
+        self.temp = temp
         self.stage_queue = stage_queue
         self.scene_queue = scene_queue
         self.frame_queue = frame_queue
@@ -556,9 +606,16 @@ class AI2THOR():
         # Set initial stage to None
         stage = None
 
+
+
+
+
         while True:
             # Check which stage the user is at
 
+            with open("program1.txt", "w") as output:
+                # output.write(str(name_list))
+                output.write(str(self.temp))
             # Sleep to prevent this from being too fast
             time.sleep(0.005)
 
@@ -597,83 +654,104 @@ class AI2THOR():
                     event = controller.step(dict(action='MoveRight'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("MoveRight")
                 elif keyboard.is_pressed('up'):
                     event = controller.step(dict(action='MoveAhead'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("MoveAhead")
                 elif keyboard.is_pressed('down'):
                     event = controller.step(dict(action='MoveBack'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("MoveBack")
                 elif keyboard.is_pressed('left'):
                     event = controller.step(dict(action='MoveLeft'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("MoveLeft")
                 elif keyboard.is_pressed('8'):
                     event = controller.step(dict(action='MoveHandAhead', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("MoveHandAhead")
                 elif keyboard.is_pressed('5'):
                     event = controller.step(dict(action='MoveHandBack', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("MoveHandBack")
                 elif keyboard.is_pressed('4'):
                     event = controller.step(dict(action='MoveHandLeft', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("MoveHandLeft")
                 elif keyboard.is_pressed('6'):
                     event = controller.step(dict(action='MoveHandRight', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("MoveHandRight")
                 elif keyboard.is_pressed('7'):
                     event = controller.step(dict(action='MoveHandUp', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("MoveHandUp")
                 elif keyboard.is_pressed('9'):
                     event = controller.step(dict(action='MoveHandDown', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("MoveHandDown")
                 elif keyboard.is_pressed('1'):
                     anglehandx = anglehandx + 30.0
                     event = controller.step(dict(action='RotateHand', x = anglehandx))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("RotateHand X axis")
                 elif keyboard.is_pressed('2'):
                     anglehandy = anglehandy + 30.0
                     event = controller.step(dict(action='RotateHand', y = anglehandy))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("RotateHand Y axis")
                 elif keyboard.is_pressed('3'):
                     anglehandz = anglehandz + 30.0
                     event = controller.step(dict(action='RotateHand', z = anglehandz))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("RotateHand Z axis")
                 elif keyboard.is_pressed('a'):
                     event = controller.step(dict(action='RotateLeft'))
                     # position = event.metadata['agent']['position']
                     # rotation = event.metadata['agent']['rotation']
                     # event = controller.step(
                     #     dict(action='TeleportFull', x=position.get('x'), y=position.get('y'), z=position.get('z'),
-                    #          rotation=rotation.get('y') - 45.0, horizon=0.0))
+                    #          rotation=int(round(rotation.get('y') - 30.0)), horizon=0.0))
+                    # time.sleep(.3)
+                    # print(rotation)
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("RotateLeft")
                 elif keyboard.is_pressed('d'):
                     event = controller.step(dict(action='RotateRight'))
                     # position = event.metadata['agent']['position']
                     # rotation = event.metadata['agent']['rotation']
                     # event = controller.step(
                     #     dict(action='TeleportFull', x=position.get('x'), y=position.get('y'), z=position.get('z'),
-                    #          rotation=rotation.get('y') + 45.0, horizon=0.0))
+                    #          rotation=int(round(rotation.get('y') + 30.0)), horizon=0.0))
+                    # time.sleep(.3)
+                    # print(rotation)
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("RotateRight")
                 elif keyboard.is_pressed('w'):
                     event = controller.step(dict(action='LookUp'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("LookUp")
                 elif keyboard.is_pressed('s'):
                     event = controller.step(dict(action='LookDown'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
+                    self.temp.append("LookDown")
             elif stage == 'get_instance_obj':
                 # Send list of objects in current instance segmentation frame to GUI
                 objects = []
@@ -700,13 +778,13 @@ class AI2THOR():
                     list4.append(lowest)
                     dict2.clear()
 
-                for i, v in dict1.items():
-                    if 'Cabinet' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                # for i, v in dict1.items():
+                #     if 'Cabinet' in i:
+                #         dict2.update({i: v})
+                # if not len(dict2) == 0:
+                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
+                #     list4.append(lowest)
+                #     dict2.clear()
 
                 for i, v in dict1.items():
                     if 'CounterTop' in i:
@@ -724,13 +802,13 @@ class AI2THOR():
                     list4.append(lowest)
                     dict2.clear()
 
-                for i, v in dict1.items():
-                    if 'Drawer' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                # for i, v in dict1.items():
+                #     if 'Drawer' in i:
+                #         dict2.update({i: v})
+                # if not len(dict2) == 0:
+                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
+                #     list4.append(lowest)
+                #     dict2.clear()
 
                 for i, v in dict1.items():
                     if 'StoveKnob' in i:
@@ -751,8 +829,8 @@ class AI2THOR():
                 list1 = [x for x in list1 if not re.search('StoveBurner', x)]
                 list1 = [x for x in list1 if not re.search('StoveKnob', x)]
                 list1 = [x for x in list1 if not re.search('TableTop', x)]
-                list1 = [x for x in list1 if not re.search('Cabinet', x)]
-                list1 = [x for x in list1 if not re.search('Drawer', x)]
+                # list1 = [x for x in list1 if not re.search('Cabinet', x)]
+                # list1 = [x for x in list1 if not re.search('Drawer', x)]
                 list1 = [x for x in list1 if not re.search('CounterTop', x)]
                 list1 = [x for x in list1 if not re.search('Shelf', x)]
                 objects = objects+list1 + list4
@@ -773,42 +851,59 @@ class AI2THOR():
 
                         if interaction[1] == 'Break':
                             event = controller.step(dict(action='BreakObject', objectId=interaction[2]))
+                            self.temp.append("BreakObject")
                         elif interaction[1] == 'Clean':
                             event = controller.step(dict(action='CleanObject', objectId=interaction[2]))
+                            self.temp.append("CleanObject")
                         elif interaction[1] == 'Close':
                             event = controller.step(dict(action='CloseObject', objectId=interaction[2]))
+                            self.temp.append("CloseObject")
                         elif interaction[1] == 'Dirty':
                             event = controller.step(dict(action='DirtyObject', objectId=interaction[2]))
+                            self.temp.append("DirtyObject")
                         elif interaction[1] == 'Drop':
                             event = controller.step(dict(action='DropHandObject'))
+                            self.temp.append("DropHandObject")
                         elif interaction[1] == 'Empty':
                             event = controller.step(dict(action='EmptyLiquidFromObject', objectId=interaction[2]))
+                            self.temp.append("EmptyLiquidFromObject")
                         elif interaction[1] == 'Fill':
                             event = controller.step(
                                 dict(action='FillObjectWithLiquid', objectId=interaction[2], fillLiquid=interaction[3]))
+                            self.temp.append("FillObjectWithLiquid")
                         elif interaction[1] == 'Open':
                             event = controller.step(dict(action='OpenObject', objectId=interaction[2]))
+                            self.temp.append("OpenObject")
                         elif interaction[1] == 'Used up':
                             event = controller.step(dict(action='UseUpObject', objectId=interaction[2]))
+                            self.temp.append("UseUpObject")
                         elif interaction[1] == 'Pick up':
                             event = controller.step(dict(action='PickupObject', objectId=interaction[2]))
+                            self.temp.append("PickupObject")
                         elif interaction[1] == 'Pull':
                             event = controller.step(
                                 dict(action='PullObject', objectId=interaction[2], moveMagnitude=10.0))
+                            self.temp.append("PullObject")
                         elif interaction[1] == 'Push':
                             event = controller.step(
                                 dict(action='PushObject', objectId=interaction[2], moveMagnitude=10.0))
+                            self.temp.append("PushObject")
                         elif interaction[1] == 'Put down':
                             event = controller.step(
-                                dict(action='PutObject', objectId=interaction[2], receptacleObjectId=interaction[4]))
+                                dict(action='PutObject', objectId=interaction[2], receptacleObjectId=interaction[4], forceAction=True))
+                            self.temp.append("PutObject")
                         elif interaction[1] == 'Slice':
                             event = controller.step(dict(action='SliceObject', objectId=interaction[2]))
+                            self.temp.append("SliceObject")
                         elif interaction[1] == 'Throw':
                             event = controller.step(dict(action='ThrowObject', moveMagnitude=100.0))
+                            self.temp.append("ThrowObject")
                         elif interaction[1] == 'Toggle off':
                             event = controller.step(dict(action='ToggleObjectOff', objectId=interaction[2]))
+                            self.temp.append("ToggleObjectOff")
                         elif interaction[1] == 'Toggle on':
                             event = controller.step(dict(action='ToggleObjectOn', objectId=interaction[2]))
+                            self.temp.append("ToggleObjectOn")
 
                         # Send frame to GUI
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
@@ -816,6 +911,7 @@ class AI2THOR():
                 except queue.Empty:
                     pass
             elif stage == 'pause':
+                self.temp.clear()
                 pass
 
     def send_frame(self, frame):
@@ -830,7 +926,7 @@ class AI2THOR():
 if __name__ == "__main__":
     root = tk.Tk()
     root.wm_geometry("820x800")
-
+    time1 = ''
     # Instantiate GUI
     gui = Gui(root)
     root.mainloop()
