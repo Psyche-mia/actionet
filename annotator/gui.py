@@ -226,9 +226,11 @@ class ChooseActionPage(tk.Frame):
 
         f = open("description.txt", "r")
         contents = f.read()
+        # contents=str(contents.split(","))
+        # print(contents)
 
         instruction = "\nINSTRUCTIONS:" + contents
-        instruction_label = tk.Label(self, text=instruction)
+        instruction_label = tk.Label(self, text=instruction,wraplength=700)
         instruction_label.pack(side="top")
 
         # Show possible target objects
@@ -294,10 +296,10 @@ class DoActionPage(tk.Frame):
         contents = f.read()
 
         instruction = "\nINSTRUCTIONS:" + contents
-        instruction_label = tk.Label(self, text=instruction)
+        instruction_label = tk.Label(self, text=instruction,wraplength=700)
         instruction_label.pack(side="top")
         load = Image.open("keyboard control.png")
-        load = load.resize((820,230))
+        load = load.resize((820,220))
         render = ImageTk.PhotoImage(load)
         clock = Label(self)
         clock.pack(side="bottom")
@@ -321,7 +323,7 @@ class DoActionPage(tk.Frame):
         # labels can be text or images
         img = Label(self, image=render)
         img.image = render
-        img.place(x=0, y=450)
+        img.place(x=0, y=460)
 
 
         # Object interaction button
@@ -334,6 +336,7 @@ class DoActionPage(tk.Frame):
                                                                             frame_queue, object_queue, input_queue,
                                                                             self.ai2thor_frame.image))
         object_interaction_button.pack(side="top", expand=False)
+
 
         # Create finish task button
         choose_task = ChooseTaskPage(root)
@@ -461,7 +464,7 @@ class DoInputPage(tk.Frame):
         contents = f.read()
 
         instruction = "\nINSTRUCTIONS:" + contents
-        instruction_label = tk.Label(self, text=instruction)
+        instruction_label = tk.Label(self, text=instruction,wraplength=700)
         instruction_label.pack(side="bottom")
         clock = Label(self)
         clock.pack(side="bottom")
@@ -760,6 +763,8 @@ class AI2THOR():
                 dict2 = {}
                 list4 = []
                 list5 = []
+                for key, value in event.instance_detections2D.items():
+                    list5.append(key)
                 for obj_id in event.metadata['objects']:
                     # Remove underscore and characters after underscore
                     # obj_name1 = re.search('^[^_]+', obj_id['name']).group()
@@ -770,13 +775,13 @@ class AI2THOR():
                         if key == 'distance':
                             list2.append(value)
                 dict1 = dict(zip(list1, list2))
-                for i, v in dict1.items():
-                    if 'StoveBurner' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                # for i, v in dict1.items():
+                #     if 'StoveBurner' in i:
+                #         dict2.update({i: v})
+                # if not len(dict2) == 0:
+                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
+                #     list4.append(lowest)
+                #     dict2.clear()
 
                 # for i, v in dict1.items():
                 #     if 'Cabinet' in i:
@@ -788,6 +793,14 @@ class AI2THOR():
 
                 for i, v in dict1.items():
                     if 'CounterTop' in i:
+                        dict2.update({i: v})
+                if not len(dict2) == 0:
+                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
+                    list4.append(lowest)
+                    dict2.clear()
+
+                for i, v in dict1.items():
+                    if 'BreadSliced' in i:
                         dict2.update({i: v})
                 if not len(dict2) == 0:
                     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
@@ -810,13 +823,13 @@ class AI2THOR():
                 #     list4.append(lowest)
                 #     dict2.clear()
 
-                for i, v in dict1.items():
-                    if 'StoveKnob' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                # for i, v in dict1.items():
+                #     if 'StoveKnob' in i:
+                #         dict2.update({i: v})
+                # if not len(dict2) == 0:
+                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
+                #     list4.append(lowest)
+                #     dict2.clear()
 
                 for i, v in dict1.items():
                     if 'TableTop' in i:
@@ -825,15 +838,17 @@ class AI2THOR():
                     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
                     list4.append(lowest)
                     dict2.clear()
-
-                list1 = [x for x in list1 if not re.search('StoveBurner', x)]
-                list1 = [x for x in list1 if not re.search('StoveKnob', x)]
-                list1 = [x for x in list1 if not re.search('TableTop', x)]
+                #
+                # list1 = [x for x in list1 if not re.search('StoveBurner', x)]
+                # list1 = [x for x in list1 if not re.search('StoveKnob', x)]
+                list5 = [x for x in list5 if not re.search('TableTop', x)]
                 # list1 = [x for x in list1 if not re.search('Cabinet', x)]
-                # list1 = [x for x in list1 if not re.search('Drawer', x)]
-                list1 = [x for x in list1 if not re.search('CounterTop', x)]
-                list1 = [x for x in list1 if not re.search('Shelf', x)]
-                objects = objects+list1 + list4
+                list5 = [x for x in list1 if not re.search('BreadSliced', x)]
+                list5 = [x for x in list5 if not re.search('CounterTop', x)]
+                list5 = [x for x in list5 if not re.search('Shelf', x)]
+                objects = objects+list5 + list4
+
+
                 self.object_queue.put(objects)
                 stage = 'do_input'
             elif stage == 'do_input':
