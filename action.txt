@@ -1,0 +1,1 @@
+['RotateLeft', 'MoveAhead', 'MoveAhead', 'MoveAhead', 'MoveAhead', 'RotateLeft', 'LookDown', 'SliceObject', 'RotateLeft', 'RotateLeft', 'MoveLeft', 'MoveLeft', 'PickupObject']
