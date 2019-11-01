@@ -11,6 +11,7 @@ import operator
 from tkinter.ttk import *
 
 
+
 class Gui():
     """
     Set overall GUI.
@@ -25,6 +26,7 @@ class Gui():
         object_queue = queue.Queue()
         input_queue = queue.Queue()
         temp=[]
+        temp2=[]
 
 
         # Show status
@@ -36,7 +38,7 @@ class Gui():
         container.pack(side="top", fill="both", expand=True)
 
         # Instantiate AI2-THOR with queues
-        ai2_thor = AI2THOR(stage_queue, scene_queue, frame_queue, object_queue, input_queue,temp)
+        ai2_thor = AI2THOR(stage_queue, scene_queue, frame_queue, object_queue, input_queue,temp,temp2)
         ai2_thor_thread = threading.Thread(target=lambda: ai2_thor.run())
         ai2_thor_thread.start()
 
@@ -87,7 +89,6 @@ class ChooseTaskPage(tk.Frame):
             "2",
             "4",
             "5",
-            "28",
             "7"
         ]
         scene_frame = tk.Frame(self)
@@ -101,21 +102,11 @@ class ChooseTaskPage(tk.Frame):
         scene_options = Combobox(self, textvariable=self.scene, state="readonly", values=SCENES)
         scene_options.pack(in_=scene_frame, side="left")
 
-
+        with open('task.txt') as f:
+            TASKS = f.read().split(',')
         # Select task
-        TASKS = [
-            "Make Coffee",
-            "Wash dishes",
-            "Prepare Slice apple",
-            "Toast a bread",
-            "Fry an egg",
-            "Make tomato soup",
-            "Make lettuce soup",
-            "Boil water with pot",
-            "Throw away cracked egg",
-            "Clear the fridge",
-            "Boil water with kettle"
-        ]
+
+
         task_frame = tk.Frame(self)
         task_frame.pack(side="top")
         task_text = tk.Label(self, text="Choose task:")
@@ -125,6 +116,7 @@ class ChooseTaskPage(tk.Frame):
         task_options = Combobox(self, textvariable=task, state="readonly", values=TASKS)
         task_options.pack(in_=task_frame, side="left")
 
+
         # Create start task button
         choose_action = ChooseActionPage(root)
         choose_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
@@ -133,12 +125,13 @@ class ChooseTaskPage(tk.Frame):
                                                                     self.scene.get(), choose_task, choose_action, None,
                                                                     None, stage_queue, scene_queue, frame_queue,
                                                                     object_queue, input_queue,
-                                                                    self.ai2thor_frame.image))
+                                                                    self.ai2thor_frame.image),)
+
+
+
 
 
         start_button.pack(side="bottom", fill="x", expand=False)
-
-
         self.lift()
 
     def send_scene(self, *args):
@@ -188,7 +181,6 @@ class ChooseActionPage(tk.Frame):
 
         # Show status
         status['text'] = "TASK:"+task + "' task in scene " + scene + "...\n"
-
         # Show initial frame
         ai2thor_frame = tk.Label(self)
         ai2thor_frame.configure(image=initial_frame)
@@ -258,12 +250,14 @@ class ChooseActionPage(tk.Frame):
 
 
 class DoActionPage(tk.Frame):
+
     """
     Choose do action page GUI.
     """
 
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
+
 
     def show(self, root, container, status, task, action, target_object, scene, choose_task, choose_action, do_action,
              do_input, stage_queue, scene_queue, frame_queue, object_queue, input_queue, initial_frame):
@@ -275,15 +269,27 @@ class DoActionPage(tk.Frame):
         if do_input != None:
             do_input.destroy()
 
+
         self.frame_queue = frame_queue
         self.object_queue = object_queue
         self.stage_queue = stage_queue
+
+
 
         stage_queue.put('do_action')
 
         # Show status
         status[
             'text'] = "TASK:"+ task + " task in scene " + scene + "...\n"
+
+        #Set the environment
+        # # global x
+        # print (task)
+
+        # x=task
+
+
+
 
         # Show frame(s)
         self.ai2thor_frame = tk.Label(self)
@@ -303,6 +309,8 @@ class DoActionPage(tk.Frame):
         render = ImageTk.PhotoImage(load)
         clock = Label(self)
         clock.pack(side="bottom")
+
+
 
         def tick():
             global time1
@@ -590,19 +598,22 @@ class DoInputPage(tk.Frame):
 
 class AI2THOR():
 
-    def __init__(self, stage_queue, scene_queue, frame_queue, object_queue, input_queue,temp):
+    def __init__(self, stage_queue, scene_queue, frame_queue, object_queue, input_queue,temp,temp2):
         self.temp = temp
+        self.temp2= temp2
         self.stage_queue = stage_queue
         self.scene_queue = scene_queue
         self.frame_queue = frame_queue
         self.object_queue = object_queue
         self.input_queue = input_queue
 
+
     def run(self):
         """Run AI2-THOR."""
         controller = ai2thor.controller.Controller()
         controller.start(player_screen_width=700,
                          player_screen_height=350)
+
         anglehandx = 0.0
         anglehandy = 0.0
         anglehandz = 0.0
@@ -613,12 +624,19 @@ class AI2THOR():
 
 
 
+
+
+
         while True:
             # Check which stage the user is at
 
-            with open("program1.txt", "w") as output:
+
+            with open("action.txt", "w") as output:
                 # output.write(str(name_list))
                 output.write(str(self.temp))
+            with open("object.txt", "w") as output1:
+                output1.write(str(self.temp2))
+
             # Sleep to prevent this from being too fast
             time.sleep(0.005)
 
@@ -763,6 +781,8 @@ class AI2THOR():
                 dict2 = {}
                 list4 = []
                 list5 = []
+                # list6=[]
+                # list7=[]
                 for key, value in event.instance_detections2D.items():
                     list5.append(key)
                 for obj_id in event.metadata['objects']:
@@ -772,6 +792,7 @@ class AI2THOR():
                     for key, value in obj_id.items():
                         if key == 'objectId':
                             list1.append(value)
+                            # list6.append(value)
                         if key == 'distance':
                             list2.append(value)
                 dict1 = dict(zip(list1, list2))
@@ -801,6 +822,38 @@ class AI2THOR():
 
                 for i, v in dict1.items():
                     if 'BreadSliced' in i:
+                        dict2.update({i: v})
+                if not len(dict2) == 0:
+                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
+                    list4.append(lowest)
+                    dict2.clear()
+
+                for i, v in dict1.items():
+                    if 'TomatoSliced' in i:
+                        dict2.update({i: v})
+                if not len(dict2) == 0:
+                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
+                    list4.append(lowest)
+                    dict2.clear()
+
+                for i, v in dict1.items():
+                    if 'AppleSliced' in i:
+                        dict2.update({i: v})
+                if not len(dict2) == 0:
+                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
+                    list4.append(lowest)
+                    dict2.clear()
+
+                for i, v in dict1.items():
+                    if 'LettuceSliced' in i:
+                        dict2.update({i: v})
+                if not len(dict2) == 0:
+                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
+                    list4.append(lowest)
+                    dict2.clear()
+
+                for i, v in dict1.items():
+                    if 'PotatoSliced' in i:
                         dict2.update({i: v})
                 if not len(dict2) == 0:
                     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
@@ -841,11 +894,16 @@ class AI2THOR():
                 #
                 # list1 = [x for x in list1 if not re.search('StoveBurner', x)]
                 # list1 = [x for x in list1 if not re.search('StoveKnob', x)]
-                list5 = [x for x in list5 if not re.search('TableTop', x)]
+
                 # list1 = [x for x in list1 if not re.search('Cabinet', x)]
-                list5 = [x for x in list1 if not re.search('BreadSliced', x)]
+
                 list5 = [x for x in list5 if not re.search('CounterTop', x)]
                 list5 = [x for x in list5 if not re.search('Shelf', x)]
+                list5 = [x for x in list5 if not re.search('TableTop', x)]
+                # for i in list6:
+                #     if i =="BreadSliced":
+                #         list7.append(i)
+                # print(list7)
                 objects = objects+list5 + list4
 
 
@@ -854,6 +912,7 @@ class AI2THOR():
             elif stage == 'do_input':
                 try:
                     interaction = self.input_queue.get(0)
+
 
                     if interaction[0] == 'emphasis':
                         event = controller.step({"action": "EmphasizeObject", "objectId": interaction[1]})
@@ -867,58 +926,74 @@ class AI2THOR():
                         if interaction[1] == 'Break':
                             event = controller.step(dict(action='BreakObject', objectId=interaction[2]))
                             self.temp.append("BreakObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Clean':
                             event = controller.step(dict(action='CleanObject', objectId=interaction[2]))
                             self.temp.append("CleanObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Close':
                             event = controller.step(dict(action='CloseObject', objectId=interaction[2]))
                             self.temp.append("CloseObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Dirty':
                             event = controller.step(dict(action='DirtyObject', objectId=interaction[2]))
                             self.temp.append("DirtyObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Drop':
                             event = controller.step(dict(action='DropHandObject'))
                             self.temp.append("DropHandObject")
                         elif interaction[1] == 'Empty':
                             event = controller.step(dict(action='EmptyLiquidFromObject', objectId=interaction[2]))
                             self.temp.append("EmptyLiquidFromObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Fill':
                             event = controller.step(
                                 dict(action='FillObjectWithLiquid', objectId=interaction[2], fillLiquid=interaction[3]))
                             self.temp.append("FillObjectWithLiquid")
+                            self.temp2.append(interaction[2])
+                            self.temp2.append(interaction[3])
                         elif interaction[1] == 'Open':
                             event = controller.step(dict(action='OpenObject', objectId=interaction[2]))
                             self.temp.append("OpenObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Used up':
                             event = controller.step(dict(action='UseUpObject', objectId=interaction[2]))
                             self.temp.append("UseUpObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Pick up':
                             event = controller.step(dict(action='PickupObject', objectId=interaction[2]))
                             self.temp.append("PickupObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Pull':
                             event = controller.step(
                                 dict(action='PullObject', objectId=interaction[2], moveMagnitude=10.0))
                             self.temp.append("PullObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Push':
                             event = controller.step(
                                 dict(action='PushObject', objectId=interaction[2], moveMagnitude=10.0))
                             self.temp.append("PushObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Put down':
                             event = controller.step(
                                 dict(action='PutObject', objectId=interaction[2], receptacleObjectId=interaction[4], forceAction=True))
                             self.temp.append("PutObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Slice':
                             event = controller.step(dict(action='SliceObject', objectId=interaction[2]))
                             self.temp.append("SliceObject")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Throw':
                             event = controller.step(dict(action='ThrowObject', moveMagnitude=100.0))
                             self.temp.append("ThrowObject")
                         elif interaction[1] == 'Toggle off':
                             event = controller.step(dict(action='ToggleObjectOff', objectId=interaction[2]))
                             self.temp.append("ToggleObjectOff")
+                            self.temp2.append(interaction[2])
                         elif interaction[1] == 'Toggle on':
                             event = controller.step(dict(action='ToggleObjectOn', objectId=interaction[2]))
                             self.temp.append("ToggleObjectOn")
+                            self.temp2.append(interaction[2])
 
                         # Send frame to GUI
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
