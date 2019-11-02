@@ -273,6 +273,8 @@ class DoInputPage(tk.Frame):
         self.ai2thor_frame.image = initial_frame
         self.ai2thor_frame.pack(side="top")
 
+        self.get_and_set_frame()
+
         # Instruction description
         f = open("resources/description.txt", "r")
         contents = f.read()
@@ -318,12 +320,29 @@ class DoInputPage(tk.Frame):
         self.target_object_text = tk.Label(self, text="Choose target object:")
         self.target_object_text.pack(in_=self.target_object_frame, side="left")
 
+        # Get list of objects from AI2-THOR instance segmentation for target objects
+        object_list.sort()
+        OBJECTS = object_list
+        self.objects = tk.StringVar(self)
+        self.objects.set(OBJECTS[0])
+        self.objects.trace("w", self.send_object_emphasis)
+        objects_options = Combobox(self, textvariable=self.objects, state="readonly", values=OBJECTS)
+        objects_options.pack(in_=self.target_object_frame, side="left")
+
         # Show possible target objects to PUT DOWN
         self.put_down_target_object_frame = tk.Frame(self)
         self.put_down_target_object_frame.pack(side="top")
         self.put_down_target_object_text = tk.Label(self, text="Choose location:")
         self.put_down_target_object_text.pack(in_=self.put_down_target_object_frame, side="left")
         self.put_down_target_object_frame.pack_forget()
+
+        # Also use list of objects from AI2-THOR instance segmentation for put down
+        object_list.sort()
+        OBJECTS = object_list
+        self.object_locations = tk.StringVar(self)
+        self.object_locations.set(OBJECTS[0])
+        objects_location_options = Combobox(self, textvariable=self.object_locations, state="readonly", values=OBJECTS)
+        objects_location_options.pack(in_=self.put_down_target_object_frame, side="left")
 
         # clock = Label(self)
         # clock.pack(side="bottom")
@@ -360,22 +379,6 @@ class DoInputPage(tk.Frame):
         liquid_options = Combobox(self, textvariable=liquids, state="readonly", values=LIQUIDS)
         liquid_options.pack(in_=self.fill_target_object_frame, side="left")
 
-        # Get list of objects from AI2-THOR instance segmentation for target objects
-        object_list.sort()
-        OBJECTS = object_list
-        self.objects = tk.StringVar(self)
-        self.objects.set(OBJECTS[0])
-        self.objects.trace("w", self.send_object_emphasis)
-        objects_options = Combobox(self, textvariable=self.objects, state="readonly", values=OBJECTS)
-        objects_options.pack(in_=self.target_object_frame, side="left")
-
-        # Also use list of objects from AI2-THOR instance segmentation for put down
-        object_list.sort()
-        OBJECTS = object_list
-        self.object_locations = tk.StringVar(self)
-        self.object_locations.set(OBJECTS[0])
-        objects_location_options = Combobox(self, textvariable=self.object_locations, state="readonly", values=OBJECTS)
-        objects_location_options.pack(in_=self.put_down_target_object_frame, side="left")
         # Create finish interaction button
         do_action = DoActionPage(root)
         do_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
@@ -393,8 +396,6 @@ class DoInputPage(tk.Frame):
 
         finish_action_button.pack(side="bottom", fill="x", expand=False)
 
-        self.get_and_set_frame()
-
         self.lift()
 
     def after_input_before_action(self, root, container, status, task, scene, choose_task,
@@ -405,7 +406,7 @@ class DoInputPage(tk.Frame):
             stage_queue.put('do_input')
             input_queue.put(['interaction', input_action, target_interaction_object, fill_liquid, put_object_location])
 
-        do_action.show(root, container, status, task, scene, None, do_action, do_input, None,
+        do_action.show(root, container, status, task, scene, choose_task, do_action, do_input, None,
                        stage_queue, scene_queue, frame_queue, object_queue, self.input_queue, initial_frame)
 
     def send_object_emphasis(self, *args):
@@ -650,143 +651,94 @@ class AI2THOR():
             elif stage == 'get_instance_obj':
                 # Send list of objects in current instance segmentation frame to GUI
                 objects = []
-                list1 = []
-                list2 = []
-                dict2 = {}
-                list4 = []
-                list5 = []
-                # list6=[]
-                # list7=[]
-                for key, value in event.instance_detections2D.items():
-                    list5.append(key)
-                for obj_id in event.metadata['objects']:
+                distance_dict = {}
+                temp_dist_dict = {}
+
+                for key in event.instance_detections2D.keys():
+                    objects.append(key)
+                for obj in event.metadata['objects']:
                     # Remove underscore and characters after underscore
                     # obj_name1 = re.search('^[^_]+', obj_id['name']).group()
                     # if obj_name1 not in objects:
-                    for key, value in obj_id.items():
-                        if key == 'objectId':
-                            list1.append(value)
-                            # list6.append(value)
-                        if key == 'distance':
-                            list2.append(value)
-                dict1 = dict(zip(list1, list2))
-                # for i, v in dict1.items():
-                #     if 'StoveBurner' in i:
-                #         dict2.update({i: v})
-                # if not len(dict2) == 0:
-                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                #     list4.append(lowest)
-                #     dict2.clear()
+                    distance_dict[obj['objectId']] = obj['distance']
 
-                # for i, v in dict1.items():
-                #     if 'Cabinet' in i:
-                #         dict2.update({i: v})
-                # if not len(dict2) == 0:
-                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                #     list4.append(lowest)
-                #     dict2.clear()
+                for name, dist in distance_dict.items():
+                    if 'CounterTop' in name:
+                        temp_dist_dict[name] = dist
+                if not len(temp_dist_dict) == 0:
+                    lowest = min(temp_dist_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    temp_dist_dict.clear()
 
-                for i, v in dict1.items():
-                    if 'CounterTop' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                for name, dist in distance_dict.items():
+                    if 'BreadSliced' in name:
+                        temp_dist_dict[name] = dist
+                if not len(temp_dist_dict) == 0:
+                    lowest = min(temp_dist_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    temp_dist_dict.clear()
 
-                for i, v in dict1.items():
-                    if 'BreadSliced' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                for name, dist in distance_dict.items():
+                    if 'TomatoSliced' in name:
+                        temp_dist_dict[name] = dist
+                if not len(temp_dist_dict) == 0:
+                    lowest = min(temp_dist_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    temp_dist_dict.clear()
 
-                for i, v in dict1.items():
-                    if 'TomatoSliced' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                for name, dist in distance_dict.items():
+                    if 'AppleSliced' in name:
+                        temp_dist_dict[name] = dist
+                if not len(temp_dist_dict) == 0:
+                    lowest = min(temp_dist_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    temp_dist_dict.clear()
 
-                for i, v in dict1.items():
-                    if 'AppleSliced' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                for name, dist in distance_dict.items():
+                    if 'LettuceSliced' in name:
+                        temp_dist_dict[name] = dist
+                if not len(temp_dist_dict) == 0:
+                    lowest = min(temp_dist_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    temp_dist_dict.clear()
 
-                for i, v in dict1.items():
-                    if 'LettuceSliced' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                for name, dist in distance_dict.items():
+                    if 'PotatoSliced' in name:
+                        temp_dist_dict[name] = dist
+                if not len(temp_dist_dict) == 0:
+                    lowest = min(temp_dist_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    temp_dist_dict.clear()
 
-                for i, v in dict1.items():
-                    if 'PotatoSliced' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                for name, dist in distance_dict.items():
+                    if 'Shelf' in name:
+                        temp_dist_dict[name] = dist
+                if not len(temp_dist_dict) == 0:
+                    lowest = min(temp_dist_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    temp_dist_dict.clear()
 
-                for i, v in dict1.items():
-                    if 'Shelf' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                for name, dist in distance_dict.items():
+                    if 'TableTop' in name:
+                        temp_dist_dict[name] = dist
+                if not len(temp_dist_dict) == 0:
+                    lowest = min(temp_dist_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    temp_dist_dict.clear()
 
-                # for i, v in dict1.items():
-                #     if 'Drawer' in i:
-                #         dict2.update({i: v})
-                # if not len(dict2) == 0:
-                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                #     list4.append(lowest)
-                #     dict2.clear()
-
-                # for i, v in dict1.items():
-                #     if 'StoveKnob' in i:
-                #         dict2.update({i: v})
-                # if not len(dict2) == 0:
-                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                #     list4.append(lowest)
-                #     dict2.clear()
-
-                for i, v in dict1.items():
-                    if 'TableTop' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
-                #
-                # list1 = [x for x in list1 if not re.search('StoveBurner', x)]
-                # list1 = [x for x in list1 if not re.search('StoveKnob', x)]
-
-                # list1 = [x for x in list1 if not re.search('Cabinet', x)]
-
-                list5 = [x for x in list5 if not re.search('CounterTop', x)]
-                list5 = [x for x in list5 if not re.search('Shelf', x)]
-                list5 = [x for x in list5 if not re.search('TableTop', x)]
-                # for i in list6:
-                #     if i =="BreadSliced":
-                #         list7.append(i)
-                # print(list7)
-                objects = objects+list5 + list4
+                objects = [x for x in objects if not re.search('CounterTop', x)]
+                objects = [x for x in objects if not re.search('Shelf', x)]
+                objects = [x for x in objects if not re.search('TableTop', x)]
 
                 self.object_queue.put(objects)
+                del objects
+                del distance_dict
+
                 stage = 'do_input'
 
             elif stage == 'do_input':
                 try:
                     interaction = self.input_queue.get(0)
-
 
                     if interaction[0] == 'emphasis':
                         event = controller.step({"action": "EmphasizeObject", "objectId": interaction[1]})
@@ -898,7 +850,6 @@ class AI2THOR():
 if __name__ == "__main__":
     root = tk.Tk()
     root.wm_geometry("820x800")
-    time1 = ''
     # Instantiate GUI
     gui = Gui(root)
     root.mainloop()
