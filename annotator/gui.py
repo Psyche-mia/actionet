@@ -315,6 +315,9 @@ class DoActionPage(tk.Frame):
         object_interaction_button.pack(side="top", expand=False)
 
 
+
+        def save_list():
+
         # Create finish task button
         choose_task = ChooseTaskPage(root)
         choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
@@ -323,16 +326,22 @@ class DoActionPage(tk.Frame):
                                                                         do_action, do_input, stage_queue, scene_queue,
                                                                         frame_queue, object_queue, input_queue,))
         finish_task_button.pack(side="bottom", fill="x", expand=False)
-        # Create finish action button --> TODO: make sure at least one action in middle level action
-        choose_action = ChooseActionPage(root)
-        choose_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        finish_action_button = tk.Button(self, text="FINISH ACTION",
-                                         command=lambda: choose_action.show(root, container, status, task, scene,
-                                                                            choose_task, choose_action, do_action,
-                                                                            do_input, stage_queue, scene_queue,
-                                                                            frame_queue, object_queue, input_queue,
-                                                                            self.ai2thor_frame.image))
-        finish_action_button.pack(side="bottom", fill="x", expand=False)
+
+        save_button = ChooseTaskPage(root)
+        save_button.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+        save1_button = tk.Button(self, text="Save Task", command=lambda: self.save_list())
+
+        save1_button.pack(side="bottom", fill="x", expand=False)
+        # # Create finish action button --> TODO: make sure at least one action in middle level action
+        # choose_action = ChooseActionPage(root)
+        # choose_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+        # finish_action_button = tk.Button(self, text="FINISH ACTION",
+        #                                  command=lambda: choose_action.show(root, container, status, task, scene,
+        #                                                                     choose_task, choose_action, do_action,
+        #                                                                     do_input, stage_queue, scene_queue,
+        #                                                                     frame_queue, object_queue, input_queue,
+        #                                                                     self.ai2thor_frame.image))
+        # finish_action_button.pack(side="bottom", fill="x", expand=False)
         self.lift()
         self.get_and_set_frame()
     def get_and_set_frame(self):
@@ -568,6 +577,7 @@ class AI2THOR():
                     self.send_frame(ai2thor_frame)
                 except queue.Empty:
                     continue
+
             elif stage == 'choose_action':
                 # Send list of all objects to GUI
                 objects = []
@@ -832,58 +842,75 @@ class AI2THOR():
                         if interaction[1] == 'Break':
                             event = controller.step(dict(action='BreakObject', objectId=interaction[2]))
                             self.temp.append("BreakObject")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Clean':
                             event = controller.step(dict(action='CleanObject', objectId=interaction[2]))
                             self.temp.append("CleanObject")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Close':
                             event = controller.step(dict(action='CloseObject', objectId=interaction[2]))
                             self.temp.append("CloseObject")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Dirty':
                             event = controller.step(dict(action='DirtyObject', objectId=interaction[2]))
                             self.temp.append("DirtyObject")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Drop':
                             event = controller.step(dict(action='DropHandObject'))
                             self.temp.append("DropHandObject")
                         elif interaction[1] == 'Empty':
                             event = controller.step(dict(action='EmptyLiquidFromObject', objectId=interaction[2]))
                             self.temp.append("EmptyLiquidFromObject")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Fill':
                             event = controller.step(
                                 dict(action='FillObjectWithLiquid', objectId=interaction[2], fillLiquid=interaction[3]))
                             self.temp.append("FillObjectWithLiquid")
+                            self.temp.append(interaction[2])
+                            self.temp.append(interaction[3])
                         elif interaction[1] == 'Open':
                             event = controller.step(dict(action='OpenObject', objectId=interaction[2]))
                             self.temp.append("OpenObject")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Used up':
                             event = controller.step(dict(action='UseUpObject', objectId=interaction[2]))
                             self.temp.append("UseUpObject")
                         elif interaction[1] == 'Pick up':
                             event = controller.step(dict(action='PickupObject', objectId=interaction[2]))
                             self.temp.append("PickupObject")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Pull':
                             event = controller.step(
                                 dict(action='PullObject', objectId=interaction[2], moveMagnitude=10.0))
                             self.temp.append("PullObject")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Push':
                             event = controller.step(
                                 dict(action='PushObject', objectId=interaction[2], moveMagnitude=10.0))
                             self.temp.append("PushObject")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Put down':
                             event = controller.step(
-                                dict(action='PutObject', objectId=interaction[2], receptacleObjectId=interaction[4], forceAction=True))
+                                dict(action='PutObject', objectId=interaction[2], receptacleObjectId=interaction[4],
+                                     forceAction=True))
                             self.temp.append("PutObject")
+                            self.temp.append(interaction[2])
+                            self.temp.append(interaction[4])
                         elif interaction[1] == 'Slice':
                             event = controller.step(dict(action='SliceObject', objectId=interaction[2]))
                             self.temp.append("SliceObject")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Throw':
                             event = controller.step(dict(action='ThrowObject', moveMagnitude=100.0))
                             self.temp.append("ThrowObject")
                         elif interaction[1] == 'Toggle off':
                             event = controller.step(dict(action='ToggleObjectOff', objectId=interaction[2]))
                             self.temp.append("ToggleObjectOff")
+                            self.temp.append(interaction[2])
                         elif interaction[1] == 'Toggle on':
                             event = controller.step(dict(action='ToggleObjectOn', objectId=interaction[2]))
                             self.temp.append("ToggleObjectOn")
+                            self.temp.append(interaction[2])
                         # Send frame to GUI
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                         self.send_frame(ai2thor_frame)
