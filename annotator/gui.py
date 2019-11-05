@@ -154,7 +154,7 @@ class ChooseActionPage(tk.Frame):
             except queue.Empty:
                 pass
         # Show status
-        status['text'] = "TASK:"+task + "' task in scene " + scene + "...\n"
+        status['text'] = "TASK: "+task + "' task in scene " + scene + "...\n"
         # Show initial frame
         # ai2thor_frame = tk.Label(self)
         # ai2thor_frame.configure(image=initial_frame)
@@ -194,31 +194,31 @@ class ChooseActionPage(tk.Frame):
         instruction_label1 = tk.Label(self, text=instruction1, wraplength=700)
         instruction_label1.pack(side="top")
 
-        instruction2 = "\nDescription: Find an empty mug, and put it under running water."
-        instruction_label2 = tk.Label(self, text=instruction2)
-        instruction_label2 = tk.Label(self, text=instruction2, wraplength=700)
-        instruction_label2.pack(side="top")
+        # instruction2 = "\nDescription: Find an empty mug, and put it under running water."
+        # instruction_label2 = tk.Label(self, text=instruction2)
+        # instruction_label2 = tk.Label(self, text=instruction2, wraplength=700)
+        # instruction_label2.pack(side="top")
 
-        instruction = "\nINSTRUCTIONS:"
-        instruction_label = tk.Label(self, text=instruction)
-        instruction_label = tk.Label(self, text=instruction,wraplength=700)
-        instruction_label.pack(side="top")
-        video_name = "demo.mp4"  # This is your video file path
-        video = imageio.get_reader(video_name)
+        # instruction = "\nINSTRUCTIONS:"
+        # instruction_label = tk.Label(self, text=instruction)
+        # instruction_label = tk.Label(self, text=instruction,wraplength=700)
+        # instruction_label.pack(side="top")
+        # video_name = "resources/demo.mp4"  # This is your video file path
+        # video = imageio.get_reader(video_name)
 
-        def stream(label):
+        # def stream(label):
 
-            for image in video.iter_data():
-                image1 =Image.fromarray(image).resize((650,650))
-                frame_image = ImageTk.PhotoImage(image1)
-                label.config(image=frame_image)
-                label.image = frame_image
-                time.sleep(.03)
+        #     for image in video.iter_data():
+        #         image1 =Image.fromarray(image).resize((650,650))
+        #         frame_image = ImageTk.PhotoImage(image1)
+        #         label.config(image=frame_image)
+        #         label.image = frame_image
+        #         time.sleep(.03)
 
 
-        thread = threading.Thread(target=stream, args=(instruction_label,) )
-        thread.daemon = 1
-        thread.start()
+        # thread = threading.Thread(target=stream, args=(instruction_label,) )
+        # thread.daemon = 1
+        # thread.start()
 
 
 
@@ -270,14 +270,14 @@ class DoActionPage(tk.Frame):
         self.ai2thor_frame.image = initial_frame
         self.ai2thor_frame.pack(side="top")
         # Instruction
-        f = open("description.txt", "r")
+        f = open("resources/description.txt", "r")
         contents = f.read()
 
         instruction = "\nINSTRUCTIONS:" + contents
         instruction_label = tk.Label(self, text=instruction)
         instruction_label = tk.Label(self, text=instruction,wraplength=700)
         instruction_label.pack(side="top")
-        load = Image.open("keyboard-control.png")
+        load = Image.open("resources/keyboard-control.png")
         load = load.resize((820,230))
         load = load.resize((820,220))
         render = ImageTk.PhotoImage(load)
@@ -314,34 +314,20 @@ class DoActionPage(tk.Frame):
                                                                             self.ai2thor_frame.image))
         object_interaction_button.pack(side="top", expand=False)
 
-
-
-        def save_list():
-
         # Create finish task button
         choose_task = ChooseTaskPage(root)
         choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
         finish_task_button = tk.Button(self, text="--------------- FINISH TASK ---------------",
                                        command=lambda: choose_task.show(root, container, status, choose_task, None,
                                                                         do_action, do_input, stage_queue, scene_queue,
-                                                                        frame_queue, object_queue, input_queue,))
+                                                                        frame_queue, object_queue, input_queue))
         finish_task_button.pack(side="bottom", fill="x", expand=False)
 
-        save_button = ChooseTaskPage(root)
-        save_button.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        save1_button = tk.Button(self, text="Save Task", command=lambda: self.save_list())
+        save_button = tk.Button(self, text="Save Task", command=lambda: self.save_list(root, container, status, choose_task, None,
+                                                                        do_action, do_input, stage_queue, scene_queue,
+                                                                        frame_queue, object_queue, input_queue))
+        save_button.pack(side="bottom", fill="x", expand=False)
 
-        save1_button.pack(side="bottom", fill="x", expand=False)
-        # # Create finish action button --> TODO: make sure at least one action in middle level action
-        # choose_action = ChooseActionPage(root)
-        # choose_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        # finish_action_button = tk.Button(self, text="FINISH ACTION",
-        #                                  command=lambda: choose_action.show(root, container, status, task, scene,
-        #                                                                     choose_task, choose_action, do_action,
-        #                                                                     do_input, stage_queue, scene_queue,
-        #                                                                     frame_queue, object_queue, input_queue,
-        #                                                                     self.ai2thor_frame.image))
-        # finish_action_button.pack(side="bottom", fill="x", expand=False)
         self.lift()
         self.get_and_set_frame()
     def get_and_set_frame(self):
@@ -353,6 +339,15 @@ class DoActionPage(tk.Frame):
             self.after(5, self.get_and_set_frame)
         except queue.Empty:
             self.after(5, self.get_and_set_frame)
+
+    def save_list(self, root, container, status, choose_task, choose_action,
+            do_action, do_input, stage_queue, scene_queue,
+            frame_queue, object_queue, input_queue):
+            stage_queue.put("save")
+            choose_task.show(root, container, status, choose_task, choose_action,
+                            do_action, do_input, stage_queue, scene_queue,
+                            frame_queue, object_queue, input_queue)
+
 class DoInputPage(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
@@ -919,6 +914,10 @@ class AI2THOR():
             elif stage == 'pause':
                 self.temp.clear()
                 pass
+            elif stage == 'save':
+                with open('actions.txt', 'w') as f:
+                    f.write(str(self.temp))
+                f.close()
     def send_frame(self, frame):
         """Send frame to the frame_queue."""
         self.frame_queue.put(frame)
