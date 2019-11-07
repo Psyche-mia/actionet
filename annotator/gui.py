@@ -648,19 +648,19 @@ class AI2THOR():
                     event = controller.step(dict(action='RotateHand', x = anglehandx))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("RotateHand X axis")
+                    self.temp.append("RotateHandX")
                 elif keyboard.is_pressed('2'):
                     anglehandy = anglehandy + 30.0
                     event = controller.step(dict(action='RotateHand', y = anglehandy))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("RotateHand Y axis")
+                    self.temp.append("RotateHandY")
                 elif keyboard.is_pressed('3'):
                     anglehandz = anglehandz + 30.0
                     event = controller.step(dict(action='RotateHand', z = anglehandz))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("RotateHand Z axis")
+                    self.temp.append("RotateHandZ")
                 elif keyboard.is_pressed('a'):
                     event = controller.step(dict(action='RotateLeft'))
                     # position = event.metadata['agent']['position']
@@ -844,76 +844,93 @@ class AI2THOR():
                         event = controller.step({"action": "UnemphasizeAll"})
                         if interaction[1] == 'Break':
                             event = controller.step(dict(action='BreakObject', objectId=interaction[2]))
-                            self.temp.append("BreakObject")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("BreakObject")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Clean':
                             event = controller.step(dict(action='CleanObject', objectId=interaction[2]))
-                            self.temp.append("CleanObject")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("CleanObject")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Close':
                             event = controller.step(dict(action='CloseObject', objectId=interaction[2]))
-                            self.temp.append("CloseObject")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("CloseObject")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Dirty':
                             event = controller.step(dict(action='DirtyObject', objectId=interaction[2]))
-                            self.temp.append("DirtyObject")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("DirtyObject")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Drop':
                             event = controller.step(dict(action='DropHandObject'))
-                            self.temp.append("DropHandObject")
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("DropHandObject")
                         elif interaction[1] == 'Empty':
                             event = controller.step(dict(action='EmptyLiquidFromObject', objectId=interaction[2]))
-                            self.temp.append("EmptyLiquidFromObject")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("EmptyLiquidFromObject")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Fill':
                             event = controller.step(
                                 dict(action='FillObjectWithLiquid', objectId=interaction[2], fillLiquid=interaction[3]))
-                            self.temp.append("FillObjectWithLiquid")
-                            self.temp.append(interaction[2])
-                            self.temp.append(interaction[3])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("FillObjectWithLiquid")
+                                self.temp.append(interaction[2])
+                                self.temp.append(interaction[3])
                         elif interaction[1] == 'Open':
                             event = controller.step(dict(action='OpenObject', objectId=interaction[2]))
-                            self.temp.append("OpenObject")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("OpenObject")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Used up':
                             event = controller.step(dict(action='UseUpObject', objectId=interaction[2]))
-                            self.temp.append("UseUpObject")
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("UseUpObject")
                         elif interaction[1] == 'Pick up':
                             event = controller.step(dict(action='PickupObject', objectId=interaction[2]))
-                            self.temp.append("PickupObject")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("PickupObject")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Pull':
                             event = controller.step(
                                 dict(action='PullObject', objectId=interaction[2], moveMagnitude=10.0))
-                            self.temp.append("PullObject")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("PullObject")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Push':
                             event = controller.step(
                                 dict(action='PushObject', objectId=interaction[2], moveMagnitude=10.0))
-                            self.temp.append("PushObject")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("PushObject")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Put down':
                             event = controller.step(
                                 dict(action='PutObject', objectId=interaction[2], receptacleObjectId=interaction[4],
                                      forceAction=True))
-                            self.temp.append("PutObject")
-                            self.temp.append(interaction[2])
-                            self.temp.append(interaction[4])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("PutObject")
+                                self.temp.append(interaction[2])
+                                self.temp.append(interaction[4])
                         elif interaction[1] == 'Slice':
                             event = controller.step(dict(action='SliceObject', objectId=interaction[2]))
-                            self.temp.append("SliceObject")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess']:
+                                self.temp.append("SliceObject")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Throw':
                             event = controller.step(dict(action='ThrowObject', moveMagnitude=100.0))
-                            self.temp.append("ThrowObject")
+                            if event.metadata['lastActionSuccess'] == 'True':
+                                self.temp.append("ThrowObject")
                         elif interaction[1] == 'Toggle off':
                             event = controller.step(dict(action='ToggleObjectOff', objectId=interaction[2]))
-                            self.temp.append("ToggleObjectOff")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess'] == 'True':
+                                self.temp.append("ToggleObjectOff")
+                                self.temp.append(interaction[2])
                         elif interaction[1] == 'Toggle on':
                             event = controller.step(dict(action='ToggleObjectOn', objectId=interaction[2]))
-                            self.temp.append("ToggleObjectOn")
-                            self.temp.append(interaction[2])
+                            if event.metadata['lastActionSuccess'] == 'True':
+                                self.temp.append("ToggleObjectOn")
+                                self.temp.append(interaction[2])
                         # Send frame to GUI
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                         self.send_frame(ai2thor_frame)
@@ -928,7 +945,7 @@ class AI2THOR():
                     lines1 = [x.replace('\n', '') for x in lines]
                 with open(lines1[0]+"_"+lines1[1], 'w') as f:
                     f.write(str(lines1))
-                    f.write("\n"+str(self.temp))
+                    f.write(str(self.temp))
                 f.close()
     def send_frame(self, frame):
         """Send frame to the frame_queue."""
