@@ -1,1 +1,0 @@
-['MoveRight', 'MoveRight', 'MoveRight', 'MoveRight', 'RotateLeft', 'RotateLeft', 'RotateLeft', 'MoveRight', 'MoveRight', 'MoveRight', 'MoveRight', 'MoveRight', 'MoveRight']

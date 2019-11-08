@@ -10,6 +10,7 @@ import time
 import re
 import operator
 from tkinter.ttk import *
+from tkinter import messagebox
 class Gui():
     """
     Set overall GUI.
@@ -19,52 +20,98 @@ class Gui():
         # Create queues
         stage_queue = queue.Queue()
         scene_queue = queue.Queue()
+        demo_queue = queue.Queue()
         frame_queue = queue.Queue()
         object_queue = queue.Queue()
         input_queue = queue.Queue()
         temp=[]
         # Show status
-        status = tk.Label(root, text="STATUS: Choosing scene and task...")
+        status = tk.Label(root, text="STATUS: Entering user ID...\n")
         status.pack(side="top", fill="x")
         # Set consistent frame
         container = tk.Frame(root)
         container.pack(side="top", fill="both", expand=True)
         # Instantiate AI2-THOR with queues
-        ai2_thor = AI2THOR(stage_queue, scene_queue, frame_queue, object_queue, input_queue,temp,status)
+        ai2_thor = AI2THOR(stage_queue, scene_queue, demo_queue, frame_queue, object_queue, input_queue,temp,status)
         ai2_thor_thread = threading.Thread(target=lambda: ai2_thor.run())
         ai2_thor_thread.start()
         # Set initial page to choose task page
-        choose_task = ChooseTaskPage(root)
-        choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        choose_task.show(root, container, status, choose_task, None, None, None, stage_queue, scene_queue, frame_queue,
+        user_id = UserIDPage(root)
+        user_id.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+        user_id.show(root, container, status, user_id, None, None, None, None, None, stage_queue, scene_queue, demo_queue, frame_queue,
                          object_queue, input_queue)
+class UserIDPage(tk.Frame):
+    def __init__(self, *args, **kwargs):
+        tk.Frame.__init__(self, *args, **kwargs)
+    def show(self, root, container, status, user_id, choose_task, demo, do_action, do_input, review, stage_queue, scene_queue, demo_queue,
+             frame_queue, object_queue, input_queue):
+        # do not have to clear unused pages, since we only use this page once
+        id_list = []
+        for i in range(100):
+            if len(str(i+1)) == 1:
+                id_list.append("00" + str(i+1))
+            elif len(str(i+1)) == 2:
+                id_list.append("0" + str(i+1))
+            elif len(str(i+1)) == 3:
+                id_list.append(str(i+1))
+
+        user_num_frame = tk.Frame(self)
+        user_num_frame.pack(side="top")
+        user_num_text = tk.Label(self, text="Enter your user ID:")
+        user_num_text.pack(in_=user_num_frame, side="left")
+        user_num_text.config(font=('Courier', '20'))
+        user_num_input = tk.Entry(self)
+        user_num_input.pack(in_=user_num_frame, side="left")
+        check_id_validity_button = tk.Button(self, text="BEGIN",font=('Courier', '19'),command=lambda: self.check_id_validity(user_num_input.get(), id_list, root, container, status,
+                                                                    user_id, choose_task, None, None,
+                                                                    None, None, stage_queue, scene_queue, demo_queue, frame_queue,
+                                                                    object_queue, input_queue))
+        check_id_validity_button.pack(side="top")
+        self.lift()
+
+    def check_id_validity(self, uid, id_list, root, container, status, user_num, choose_task, choose_action, do_action, do_input, review, stage_queue, scene_queue,demo_queue,
+             frame_queue, object_queue, input_queue):
+        if str(uid) not in id_list:
+            # id not in list --> show popup error message
+            messagebox.showerror("Error", "Please make sure you enter a valid user ID, from 001 to 100.")
+        else:
+            # valid id --> move to task choosing page
+            choose_task = ChooseTaskPage(root)
+            choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+            choose_task.show(root, container, uid, status,
+                user_num, choose_task, choose_action, do_action,
+                do_input, review, stage_queue, scene_queue, demo_queue, frame_queue,
+                object_queue, input_queue)
+
 class ChooseTaskPage(tk.Frame):
     """
     Set choose task page GUI.
     """
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
-    def show(self, root, container, status, choose_task, choose_action, do_action, do_input, stage_queue, scene_queue,
-             frame_queue, object_queue, input_queue):
+    def show(self, root, container, user_id, status, user_num, choose_task, demo, do_action, do_input, review, stage_queue, scene_queue,
+             demo_queue, frame_queue, object_queue, input_queue):
         # Clear unused pages
-        if choose_action != None:
-            choose_action.destroy()
+        if demo != None:
+            demo.destroy()
         if do_action != None:
             do_action.destroy()
         if do_input != None:
             do_input.destroy()
+        if user_num != None:
+            user_num.destroy()
+        if review != None:
+            review.destroy()
         stage_queue.put('choose_task')
         self.scene_queue = scene_queue
         self.frame_queue = frame_queue
-        # TODO: Create middle level actions list
-        # TODO: Create middle level actions + target list
-        # TODO: Create base actions list
         status['text'] = "STATUS: Choosing scene and task...\n"
         # Show initial frame
         self.ai2thor_frame = tk.Label(self)
         self.get_and_set_frame()
         self.ai2thor_frame.pack(side="top")
         # Select scene
+        # TODO: Select possible scenes for specific users --> using 'user_id'
         SCENES = [
             "1",
             "2",
@@ -84,7 +131,7 @@ class ChooseTaskPage(tk.Frame):
         self.scene.trace("w", self.send_scene)
         scene_options = Combobox(self, textvariable=self.scene, state="readonly", values=SCENES,font=('Courier', '20'))
         scene_options.pack(in_=scene_frame, side="left")
-        # Select task
+        # TODO: Select task for specific users --> using 'user_id'
         TASKS = [
             "Make Coffee",
             "Wash dishes",
@@ -108,15 +155,15 @@ class ChooseTaskPage(tk.Frame):
         task_options = Combobox(self, textvariable=task, state="readonly", values=TASKS,font=('Courier', '20'))
         task_options.pack(in_=task_frame, side="left")
         # Create start task button
-        choose_action = ChooseActionPage(root)
-        choose_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        start_button = tk.Button(self, text="START TASK",font=('Courier', '19'),
-                                 command=lambda: choose_action.show(root, container, status, task.get(),
-                                                                    self.scene.get(), choose_task, choose_action, None,
-                                                                    None, stage_queue, scene_queue, frame_queue,
+        demo = DemoPage(root)
+        demo.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+        demo_button = tk.Button(self, text="WATCH DEMO",font=('Courier', '19'),
+                                 command=lambda: demo.show(root, container, user_id, status, task.get(),
+                                                                    self.scene.get(), choose_task, demo, None,
+                                                                    None, None, stage_queue, scene_queue, demo_queue, frame_queue,
                                                                     object_queue, input_queue,
                                                                     self.ai2thor_frame.image))
-        start_button.pack(side="bottom", fill="x", expand=False)
+        demo_button.pack(side="bottom", fill="x", expand=False)
         self.lift()
     def send_scene(self, *args):
         """Get scene in the scene options and send to scene_queue."""
@@ -130,14 +177,15 @@ class ChooseTaskPage(tk.Frame):
             self.after(1, self.get_and_set_frame)
         except queue.Empty:
             self.after(1, self.get_and_set_frame)
-class ChooseActionPage(tk.Frame):
+
+class DemoPage(tk.Frame):
     """
     Set choose action page GUI.
     """
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
-    def show(self, root, container, status, task, scene, choose_task, choose_action, do_action, do_input, stage_queue,
-             scene_queue, frame_queue, object_queue, input_queue, initial_frame):
+    def show(self, root, container, user_id, status, task, scene, choose_task, demo, do_action, do_input, review, stage_queue,
+             scene_queue, demo_queue, frame_queue, object_queue, input_queue, initial_frame):
         """Show information for action."""
         # Clear unused pages
         if choose_task != None:
@@ -146,197 +194,135 @@ class ChooseActionPage(tk.Frame):
             do_action.destroy()
         if do_input != None:
             do_input.destroy()
-        stage_queue.put('choose_action')
-        scene_queue.put(scene)
-        self.object_queue = object_queue
-        while True:
-            try:
-                objects = self.object_queue.get(0)
-                break
-            except queue.Empty:
-                pass
+        if review != None:
+            review.destroy()
+
+        stage_queue.put('demo')
+        self.demo_queue = demo_queue
+
+        # write task and scene settings to draw it later
+        with open('settings.txt', 'w') as f:
+            f.truncate(0)
+            f.write(task+"\n")
+            f.write("FloorPlan"+scene)
+
         # Show status
-        status['text'] = "Watch the Demonstration Video"
-        # Show initial frame
-        # ai2thor_frame = tk.Label(self)
-        # ai2thor_frame.configure(image=initial_frame)
-        # ai2thor_frame.image = initial_frame
-        # ai2thor_frame.pack(side="top")
-        # # Add text to show this is action choice
-        # mid_action_frame = tk.Frame(self)
-        # mid_action_frame.pack(side="top")
-        # mid_action_text = tk.Label(self, text="Choose action:")
-        # mid_action_text.pack(in_=mid_action_frame, side="left")
-        # Show middle level actions
-        # MID_ACTIONS = [
-        #     "Boil",
-        #     "Cook",
-        #     "Fry",
-        #     "Heat",
-        #     "Navigate",
-        #     "Robotic Control",
-        #     "Serve",
-        #     "Toast",
-        #     "Wash",
-        # ]
-        # mid_actions = tk.StringVar(self)
-        # mid_actions.set(MID_ACTIONS[0])
-        # mid_actions_options = Combobox(self, textvariable=mid_actions, state="readonly", values=MID_ACTIONS)
-        # mid_actions_options.pack(in_=mid_action_frame, side="left")
-        # # Add text to show this is target object choice
-        # objects_frame = tk.Frame(self)
-        # objects_frame.pack(side="top")
-        # objects_text = tk.Label(self, text="Choose target object:")
-        # objects_text.pack(in_=objects_frame, side="left")
+        status['text'] = "STATUS: Watching the demo video...\n"
 
-
-
-        instruction1 = "\nExample task: Fill up water." + "\nDescription: Find an empty mug, and put it under running water."
-        instruction_label1 = tk.Label(self, text=instruction1)
-        instruction_label1 = tk.Label(self, text=instruction1, wraplength=700)
-        instruction_label1.pack(side="top")
-        instruction_label1.config(font=("Courier Bold", 14))
-
-        # instruction2 = "\nDescription: Find an empty mug, and put it under running water."
-        # instruction_label2 = tk.Label(self, text=instruction2)
-        # instruction_label2 = tk.Label(self, text=instruction2, wraplength=700)
-        # instruction_label2.pack(side="top")
-
-        instruction = "\nINSTRUCTIONS:"
-        instruction_label = tk.Label(self, text=instruction)
-        instruction_label = tk.Label(self, text=instruction,wraplength=700)
+        instruction = "Demo task: Fill up water." + "\nDemo instruction: Find an empty mug, and put it under running water."
+        instruction_label = tk.Label(self, text=instruction, wraplength=700)
         instruction_label.pack(side="top")
-        video_name = "demo.mp4"  # This is your video file path
-        video = imageio.get_reader(video_name)
+        instruction_label.config(font=("Courier Bold", 14))
 
-        def stream(label):
+        # # show demo video
+        # self.demo_frame = tk.Label(self)
+        # self.get_and_set_demo_video()
+        # self.demo_frame.pack(side="top")
 
-            for image in video.iter_data():
-                image1 =Image.fromarray(image).resize((880,880))
-                frame_image = ImageTk.PhotoImage(image1)
-                label.config(image=frame_image)
-                label.image = frame_image
-                time.sleep(.03)
-
-
-        thread = threading.Thread(target=stream, args=(instruction_label,) )
-        thread.daemon = 1
-        thread.start()
-
-
-
-
-        # Show possible target objects
-        # objects.sort()
-        # OBJECTS = objects
-        # objects = tk.StringVar(self)
-        # objects.set(OBJECTS[0])
-        # objects_options = Combobox(self, textvariable=objects, state="readonly", values=OBJECTS)
-        # objects_options.pack(in_=objects_frame, side="left")
-        # Create start action button
         do_action = DoActionPage(root)
         do_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        start_action_button = tk.Button(self, text="READY TO START",font=('Courier', '19'),
-                                        command=lambda: do_action.show(root, container, status, task, '',
-                                                                       '', scene, None, choose_action,
-                                                                       do_action, None, stage_queue, scene_queue,
+        start_action_button = tk.Button(self, text="START TASK",font=('Courier', '19'),
+                                        command=lambda: do_action.show(root, container, user_id, status, task, scene, None, demo,
+                                                                       do_action, None, None, stage_queue, scene_queue,demo_queue,
                                                                        frame_queue, object_queue, input_queue,
                                                                        initial_frame,))
         start_action_button.pack(side="bottom", fill="x", expand=False)
         # Show page
         self.lift()
+
+    def get_and_set_demo_video(self):
+        """Get first frame in the frame_queue, if any, and set the GUI frame to that frame."""
+        try:
+            frame = self.demo_queue.get(0)
+            frame = ImageTk.PhotoImage(frame)
+            self.demo_frame.configure(image=frame)
+            self.demo_frame.image = frame
+            self.after(1, self.get_and_set_demo_video)
+        except queue.Empty:
+            self.after(1, self.get_and_set_demo_video)
+
 class DoActionPage(tk.Frame):
     """
     Choose do action page GUI.
     """
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
-    def show(self, root, container, status, task, action, target_object, scene, choose_task, choose_action, do_action,
-             do_input, stage_queue, scene_queue, frame_queue, object_queue, input_queue, initial_frame):
+    def show(self, root, container, user_id, status, task, scene, choose_task, demo, do_action,
+             do_input, review, stage_queue, scene_queue,demo_queue, frame_queue, object_queue, input_queue, initial_frame):
         # Clear unused pages
-        if choose_action != None:
-            choose_action.destroy()
+        if demo != None:
+            demo.destroy()
         if choose_task != None:
             choose_task.destroy()
         if do_input != None:
             do_input.destroy()
+        if review != None:
+            review.destroy()
         self.frame_queue = frame_queue
         self.object_queue = object_queue
         self.stage_queue = stage_queue
         stage_queue.put('do_action')
         # Show status
         status[
-            'text'] = "TASK:"+ task + " task in scene " + scene + "...\n"
-
+            'text'] = "STATUS: Doing '"+ task + "' task in Scene " + scene + "...\n"
 
         # Show frame(s)
         self.ai2thor_frame = tk.Label(self)
         self.ai2thor_frame.configure(image=initial_frame)
         self.ai2thor_frame.image = initial_frame
         self.ai2thor_frame.pack(side="top")
-        # Instruction
-        f = open("description.txt", "r")
-        contents = f.read()
 
-        instruction = "\nINSTRUCTIONS:" + contents
-        instruction_label = tk.Label(self, text=instruction)
-        instruction_label = tk.Label(self, text=instruction,wraplength=700)
-        instruction_label.pack(side="top")
-        load = Image.open("keyboard-control.png")
-        # load = load.resize((820,230))
-        load = load.resize((990,280))
-        render = ImageTk.PhotoImage(load)
-        clock = Label(self)
-        clock.pack(side="bottom")
-        def tick():
-            global time1
-            # get the current local time from the PC
-            time2 = time.strftime('%H:%M:%S')
-            # if time string has changed, update it
-            if time2 != time1:
-                time1 = time2
-                clock.config(text="Time:"+time2)
-            # calls itself every 200 milliseconds
-            # to update the time display as needed
-            # could use >200 ms, but display gets jerky
-            clock.after(200, tick)
-        tick()
+        # TODO: change instruction according to 'task'
+        # f = open("resources/task-descriptions.txt", "r")
+        # contents = f.read()
+        # instruction = "\nINSTRUCTIONS: " + contents
+        # instruction_label = tk.Label(self, text=instruction)
+        # instruction_label = tk.Label(self, text=instruction,wraplength=700)
+        # instruction_label.pack(side="top")
+
+        # show keyboard
+        keyboard = Image.open("resources/keyboard-control.png")
+        keyboard = keyboard.resize((990,280))
+        keyboard_render = ImageTk.PhotoImage(keyboard)
+        keyboard_label = Label(self, image=keyboard_render)
+        keyboard_label.image = keyboard_render
+        keyboard_label.place(x=100, y=620)
+
+        # clock = Label(self)
+        # clock.pack(side="bottom")
+        # def tick():
+        #     global time1
+        #     # get the current local time from the PC
+        #     time2 = time.strftime('%H:%M:%S')
+        #     # if time string has changed, update it
+        #     if time2 != time1:
+        #         time1 = time2
+        #         clock.config(text="Time:"+time2)
+        #     # calls itself every 200 milliseconds
+        #     # to update the time display as needed
+        #     # could use >200 ms, but display gets jerky
+        #     clock.after(200, tick)
+        # tick()
         # labels can be text or images
-        img = Label(self, image=render)
-        img.image = render
-        img.place(x=100, y=620)
-
-
 
         # Object interaction button
         do_input = DoInputPage(root)
         do_input.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
         object_interaction_button = tk.Button(self, text="Interact with an object",font=('Courier', '13'),
-                                              command=lambda: do_input.show(root, container, status, task, action,
-                                                                            target_object, scene, None, None, do_action,
-                                                                            do_input, stage_queue, scene_queue,
+                                              command=lambda: do_input.show(root, container, user_id, status, task, scene, None, None, do_action,
+                                                                            do_input, review, stage_queue, scene_queue,demo_queue,
                                                                             frame_queue, object_queue, input_queue,
                                                                             self.ai2thor_frame.image))
         object_interaction_button.pack(side="top", expand=False)
 
-        with open('actions.txt', 'w') as f:
-            f.truncate(0)
-            f.write(task+"\n")
-            f.write("FloorPlan"+scene)
-
         # Create finish task button
-        choose_task = ChooseTaskPage(root)
-        choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        finish_task_button = tk.Button(self, text="--------------- REDO TASK ---------------",
-                                       command=lambda: choose_task.show(root, container, status, choose_task, None,
-                                                                        do_action, do_input, stage_queue, scene_queue,
+        review = ReviewPage(root)
+        review.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+        finish_task_button = tk.Button(self, text="FINISH AND REVIEW TASK",
+                                       command=lambda: review.show(root, container, user_id, status, task, scene, None, None,
+                                                                        do_action, do_input, review, stage_queue, scene_queue,demo_queue,
                                                                         frame_queue, object_queue, input_queue))
         finish_task_button.pack(side="bottom", fill="x", expand=False)
-
-        save_button = tk.Button(self, text="--------------- SAVE TASK ---------------", command=lambda: self.save_list(root, container, status, choose_task, None,
-                                                                        do_action, do_input, stage_queue, scene_queue,
-                                                                        frame_queue, object_queue, input_queue))
-        save_button.pack(side="bottom", fill="x", expand=False)
 
         self.lift()
         self.get_and_set_frame()
@@ -350,26 +336,20 @@ class DoActionPage(tk.Frame):
         except queue.Empty:
             self.after(1, self.get_and_set_frame)
 
-    def save_list(self, root, container, status, choose_task, choose_action,
-            do_action, do_input, stage_queue, scene_queue,
-            frame_queue, object_queue, input_queue):
-            stage_queue.put("save")
-            choose_task.show(root, container, status, choose_task, choose_action,
-                            do_action, do_input, stage_queue, scene_queue,
-                            frame_queue, object_queue, input_queue)
-
 class DoInputPage(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
-    def show(self, root, container, status, task, action, target_object, scene, choose_task, choose_action, do_action,
-             do_input, stage_queue, scene_queue, frame_queue, object_queue, input_queue, initial_frame):
+    def show(self, root, container, user_id, status, task, scene, choose_task, demo, do_action,
+             do_input, review, stage_queue, scene_queue, demo_queue, frame_queue, object_queue, input_queue, initial_frame):
         # Clear unused pages
-        if choose_action != None:
-            choose_action.destroy()
+        if demo != None:
+            demo.destroy()
         if choose_task != None:
             choose_task.destroy()
         if do_action != None:
             do_action.destroy()
+        if review != None:
+            review.destroy()
         # Send stage update to AI2-THOR
         stage_queue.put('get_instance_obj')
         self.frame_queue = frame_queue
@@ -383,7 +363,7 @@ class DoInputPage(tk.Frame):
         self.input_queue = input_queue
         # Change status
         status[
-            'text'] = "STATUS: Interacting with object for '" + action + target_object + "' action for '" + task + "' task in scene " + scene + "...\n"
+            'text'] = "STATUS: Interacting with object for '" + task + "' task in Scene " + scene + "...\n"
         # Show initial frame
         self.ai2thor_frame = tk.Label(self)
         self.ai2thor_frame.configure(image=initial_frame)
@@ -432,28 +412,30 @@ class DoInputPage(tk.Frame):
         self.put_down_target_object_text.pack(in_=self.put_down_target_object_frame, side="left")
         self.put_down_target_object_frame.pack_forget()
         self.put_down_target_object_text.config(font=('Courier', '20'))
-        f = open("description.txt", "r")
-        contents = f.read()
 
-        instruction = "\nINSTRUCTIONS:" + contents
-        instruction_label = tk.Label(self, text=instruction)
-        instruction_label = tk.Label(self, text=instruction,wraplength=700)
-        instruction_label.pack(side="bottom")
-        clock = Label(self)
-        clock.pack(side="bottom")
-        def tick():
-            global time1
-            # get the current local time from the PC
-            time2 = time.strftime('%H:%M:%S')
-            # if time string has changed, update it
-            if time2 != time1:
-                time1 = time2
-                clock.config(text="Time:" + time2)
-            # calls itself every 200 milliseconds
-            # to update the time display as needed
-            # could use >200 ms, but display gets jerky
-            clock.after(200, tick)
-        tick()
+        # TODO: change instruction according to 'task'
+        # f = open("resources/task-descriptions.txt", "r")
+        # contents = f.read()
+        # instruction = "\nINSTRUCTIONS: " + contents
+        # instruction_label = tk.Label(self, text=instruction)
+        # instruction_label = tk.Label(self, text=instruction,wraplength=700)
+        # instruction_label.pack(side="bottom")
+
+        # clock = Label(self)
+        # clock.pack(side="bottom")
+        # def tick():
+        #     global time1
+        #     # get the current local time from the PC
+        #     time2 = time.strftime('%H:%M:%S')
+        #     # if time string has changed, update it
+        #     if time2 != time1:
+        #         time1 = time2
+        #         clock.config(text="Time:" + time2)
+        #     # calls itself every 200 milliseconds
+        #     # to update the time display as needed
+        #     # could use >200 ms, but display gets jerky
+        #     clock.after(200, tick)
+        # tick()
         LIQUIDS = [
             'coffee',
             'water',
@@ -489,29 +471,28 @@ class DoInputPage(tk.Frame):
         # Create finish interaction button
         do_action = DoActionPage(root)
         do_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        finish_action_button = tk.Button(self, text="FINISH INTERACTION",font=('Courier', '19'),
-                                         command=lambda: self.after_input_before_action(root, container, status, task,
-                                                                                        action, target_object, scene,
-                                                                                        None, None, do_action, do_input,
-                                                                                        stage_queue, scene_queue,
+        finish_action_button = tk.Button(self, text="INTERACT",font=('Courier', '19'),
+                                         command=lambda: self.after_input_before_action(root, container, user_id, status, task,
+                                                                                        scene,
+                                                                                        None, None, do_action, do_input, review,
+                                                                                        stage_queue, scene_queue, demo_queue,
                                                                                         frame_queue, object_queue,
                                                                                         self.input_queue, initial_frame,
-                                                                                        True, self.input_actions.get(),
+                                                                                        self.input_actions.get(),
                                                                                         self.objects.get(),
                                                                                         liquids.get(),
                                                                                         self.object_locations.get()))
         finish_action_button.pack(side="bottom", fill="x", expand=False)
         self.get_and_set_frame()
         self.lift()
-    def after_input_before_action(self, root, container, status, task, action, target_object, scene, choose_task,
-                                  choose_action, do_action, do_input, stage_queue, scene_queue, frame_queue,
-                                  object_queue, input_queue, initial_frame, interaction, input_action,
+    def after_input_before_action(self, root, container, user_id, status, task, scene, choose_task,
+                                  demo, do_action, do_input, review, stage_queue, scene_queue, demo_queue, frame_queue,
+                                  object_queue, input_queue, initial_frame, input_action,
                                   target_interaction_object, fill_liquid, put_object_location):
-        if interaction:
-            stage_queue.put('do_input')
-            input_queue.put(['interaction', input_action, target_interaction_object, fill_liquid, put_object_location])
-        do_action.show(root, container, status, task, action, target_object, scene, None, None, do_action, do_input,
-                       stage_queue, scene_queue, frame_queue, object_queue, self.input_queue, initial_frame)
+        stage_queue.put('do_input')
+        input_queue.put(['interaction', input_action, target_interaction_object, fill_liquid, put_object_location])
+        do_action.show(root, container, user_id, status, task, scene, None, None, do_action, do_input, None,
+                       stage_queue, scene_queue, demo_queue, frame_queue, object_queue, self.input_queue, initial_frame)
     def send_object_emphasis(self, *args):
         """
         Send objectId to be emphasised and get frame in return.
@@ -547,12 +528,73 @@ class DoInputPage(tk.Frame):
             self.target_object_frame.pack()
             self.put_down_target_object_frame.pack_forget()
             self.fill_target_object_frame.pack_forget()
+
+class ReviewPage(tk.Frame):
+    def __init__(self, *args, **kwargs):
+        tk.Frame.__init__(self, *args, **kwargs)
+    def show(self, root, container, user_id, status, task, scene, choose_task, demo, do_action,
+             do_input, review, stage_queue, scene_queue, demo_queue, frame_queue, object_queue, input_queue):
+        # Clear unused pages
+        if demo != None:
+            demo.destroy()
+        if choose_task != None:
+            choose_task.destroy()
+        if do_action != None:
+            do_action.destroy()
+        if do_input != None:
+            do_input.destroy()
+
+        stage_queue.put('review')
+        status['text'] = "STATUS: Reviewing actions for '" + task + "' task for Scene " + scene + "...\n"
+
+        self.frame_queue = frame_queue
+
+        # show replay video
+        self.ai2thor_frame = tk.Label(self)
+        self.ai2thor_frame.pack(side="top")
+        self.get_and_set_frame()
+
+        choose_task = ChooseTaskPage(root)
+        choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+        finish_task_button = tk.Button(self, text="REDO TASK",
+                                       command=lambda: choose_task.show(root, container, user_id, status, None, choose_task, None, None,
+                                                                        None, review, stage_queue, scene_queue, demo_queue,
+                                                                        frame_queue, object_queue, input_queue))
+        finish_task_button.pack(side="bottom", fill="x", expand=False)
+
+        save_button = tk.Button(self, text="SAVE TASK", command=lambda: self.save_list(root, container, user_id, status, choose_task, None,
+                                                                None, None, review, stage_queue, scene_queue, demo_queue,
+                                                                frame_queue, object_queue, input_queue))
+        save_button.pack(side="bottom", fill="x", expand=False)
+        
+        self.lift()
+
+    def save_list(self, root, container, user_id, status, choose_task, demo,
+        do_action, do_input, review, stage_queue, scene_queue, demo_queue,
+        frame_queue, object_queue, input_queue):
+        stage_queue.put("save")
+        choose_task.show(root, container, user_id, status, None, choose_task, demo,
+                        do_action, do_input, review, stage_queue, scene_queue, demo_queue,
+                        frame_queue, object_queue, input_queue)
+
+    def get_and_set_frame(self):
+        """Get first frame in the frame_queue, if any, and set the GUI frame to that frame."""
+        try:
+            frame = self.frame_queue.get(0)
+            self.ai2thor_frame.configure(image=frame)
+            self.ai2thor_frame.image = frame
+            self.after(1, self.get_and_set_frame)
+        except queue.Empty:
+            self.after(1, self.get_and_set_frame)
+
+
 class AI2THOR():
-    def __init__(self, stage_queue, scene_queue, frame_queue, object_queue, input_queue,temp,status):
+    def __init__(self, stage_queue, scene_queue, demo_queue, frame_queue, object_queue, input_queue,temp,status):
         self.temp = temp
         self.status= status
         self.stage_queue = stage_queue
         self.scene_queue = scene_queue
+        self.demo_queue = demo_queue
         self.frame_queue = frame_queue
         self.object_queue = object_queue
         self.input_queue = input_queue
@@ -568,9 +610,6 @@ class AI2THOR():
         stage = None
         while True:
             # Check which stage the user is at
-            with open("program1.txt", "w") as output:
-                # output.write(str(name_list))
-                output.write(str(self.temp))
             # Sleep to prevent this from being too fast
             time.sleep(0.005)
             # Try to get stage from stage_queue
@@ -579,6 +618,8 @@ class AI2THOR():
             except queue.Empty:
                 pass
             if stage == 'choose_task':
+                # reset action list
+                self.action_list = []
                 try:
                     scene = self.scene_queue.get(0)
                     controller.reset('FloorPlan' + scene)
@@ -588,16 +629,23 @@ class AI2THOR():
                     self.send_frame(ai2thor_frame)
                 except queue.Empty:
                     continue
+            elif stage == 'demo':
+                # reset video demo queue
+                with self.demo_queue.mutex:
+                    self.demo_queue.queue.clear()
+                # send demo video frames
+                video_name = "resources/demo.mp4"  # This is your video file path
+                video = imageio.get_reader(video_name)
 
-            elif stage == 'choose_action':
-                # Send list of all objects to GUI
-                objects = []
-                for obj in event.metadata['objects']:
-                    # Remove underscore and characters after underscore
-                    obj_name = re.search('^[^_]+', obj['name']).group()
-                    if obj_name not in objects:
-                        objects.append(obj_name)
-                self.object_queue.put(objects)
+                for frame in video.iter_data():
+                    # to check for user skipping demo video
+                    try:
+                        stage = self.stage_queue.get(0)
+                        break
+                    except queue.Empty:
+                        frame = Image.fromarray(frame).resize((880,880))
+                        self.demo_queue.put(frame)
+                        time.sleep(.03)
                 stage = 'pause'
             elif stage == 'do_action':
                 # Send frame(s) to GUI
@@ -605,70 +653,70 @@ class AI2THOR():
                     event = controller.step(dict(action='MoveRight'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("MoveRight")
+                    self.action_list.append("MoveRight")
                 elif keyboard.is_pressed('up'):
                     event = controller.step(dict(action='MoveAhead'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("MoveAhead")
+                    self.action_list.append("MoveAhead")
                 elif keyboard.is_pressed('down'):
                     event = controller.step(dict(action='MoveBack'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("MoveBack")
+                    self.action_list.append("MoveBack")
                 elif keyboard.is_pressed('left'):
                     event = controller.step(dict(action='MoveLeft'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("MoveLeft")
+                    self.action_list.append("MoveLeft")
                 elif keyboard.is_pressed('8'):
                     event = controller.step(dict(action='MoveHandAhead', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("MoveHandAhead")
+                    self.action_list.append("MoveHandAhead")
                 elif keyboard.is_pressed('5'):
                     event = controller.step(dict(action='MoveHandBack', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("MoveHandBack")
+                    self.action_list.append("MoveHandBack")
                 elif keyboard.is_pressed('4'):
                     event = controller.step(dict(action='MoveHandLeft', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("MoveHandLeft")
+                    self.action_list.append("MoveHandLeft")
                 elif keyboard.is_pressed('6'):
                     event = controller.step(dict(action='MoveHandRight', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("MoveHandRight")
+                    self.action_list.append("MoveHandRight")
                 elif keyboard.is_pressed('7'):
                     event = controller.step(dict(action='MoveHandUp', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("MoveHandUp")
+                    self.action_list.append("MoveHandUp")
                 elif keyboard.is_pressed('9'):
                     event = controller.step(dict(action='MoveHandDown', moveMagnitude = 0.1))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("MoveHandDown")
+                    self.action_list.append("MoveHandDown")
                 elif keyboard.is_pressed('1'):
                     anglehandx = anglehandx + 30.0
                     event = controller.step(dict(action='RotateHand', x = anglehandx))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("RotateHandX")
+                    self.action_list.append("RotateHandX")
                 elif keyboard.is_pressed('2'):
                     anglehandy = anglehandy + 30.0
                     event = controller.step(dict(action='RotateHand', y = anglehandy))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("RotateHandY")
+                    self.action_list.append("RotateHandY")
                 elif keyboard.is_pressed('3'):
                     anglehandz = anglehandz + 30.0
                     event = controller.step(dict(action='RotateHand', z = anglehandz))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("RotateHandZ")
+                    self.action_list.append("RotateHandZ")
                 elif keyboard.is_pressed('a'):
                     event = controller.step(dict(action='RotateLeft'))
                     # position = event.metadata['agent']['position']
@@ -680,7 +728,7 @@ class AI2THOR():
                     # print(rotation)
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("RotateLeft")
+                    self.action_list.append("RotateLeft")
                 elif keyboard.is_pressed('d'):
                     event = controller.step(dict(action='RotateRight'))
                     # position = event.metadata['agent']['position']
@@ -692,150 +740,99 @@ class AI2THOR():
                     # print(rotation)
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("RotateRight")
+                    self.action_list.append("RotateRight")
                 elif keyboard.is_pressed('w'):
                     event = controller.step(dict(action='LookUp'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("LookUp")
+                    self.action_list.append("LookUp")
                 elif keyboard.is_pressed('s'):
                     event = controller.step(dict(action='LookDown'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                     self.send_frame(ai2thor_frame)
-                    self.temp.append("LookDown")
+                    self.action_list.append("LookDown")
             elif stage == 'get_instance_obj':
                 # Send list of objects in current instance segmentation frame to GUI
+                obj_distance = {}
+                lowest_dict = {}
                 objects = []
-                list1 = []
-                list2 = []
-                dict2 = {}
-                list4 = []
-                list5 = []
-                # list6=[]
-                # list7=[]
-                for key, value in event.instance_detections2D.items():
-                    list5.append(key)
-                for obj_id in event.metadata['objects']:
+
+                for obj in event.instance_detections2D:
+                    objects.append(obj)
+
+                objects = [x for x in objects if not re.search('CounterTop', x)]
+                objects = [x for x in objects if not re.search('Shelf', x)]
+                objects = [x for x in objects if not re.search('TableTop', x)]
+
+                for obj in event.metadata['objects']:
                     # Remove underscore and characters after underscore
                     # obj_name1 = re.search('^[^_]+', obj_id['name']).group()
                     # if obj_name1 not in objects:
-                    for key, value in obj_id.items():
-                        if key == 'objectId':
-                            list1.append(value)
-                            # list6.append(value)
-                        if key == 'distance':
-                            list2.append(value)
-                dict1 = dict(zip(list1, list2))
-                # for i, v in dict1.items():
-                #     if 'StoveBurner' in i:
-                #         dict2.update({i: v})
-                # if not len(dict2) == 0:
-                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                #     list4.append(lowest)
-                #     dict2.clear()
+                    obj_distance[obj['objectId']] = obj['distance']
 
-                # for i, v in dict1.items():
-                #     if 'Cabinet' in i:
-                #         dict2.update({i: v})
-                # if not len(dict2) == 0:
-                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                #     list4.append(lowest)
-                #     dict2.clear()
-
-                for i, v in dict1.items():
+                for i, v in obj_distance.items():
                     if 'CounterTop' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                        lowest_dict[i] =  v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                for i, v in dict1.items():
+                for i, v in obj_distance.items():
                     if 'BreadSliced' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                        lowest_dict[i] =  v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                for i, v in dict1.items():
+                for i, v in obj_distance.items():
                     if 'TomatoSliced' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                        lowest_dict[i] =  v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                for i, v in dict1.items():
+                for i, v in obj_distance.items():
                     if 'AppleSliced' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                        lowest_dict[i] =  v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                for i, v in dict1.items():
+                for i, v in obj_distance.items():
                     if 'LettuceSliced' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                        lowest_dict[i] =  v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                for i, v in dict1.items():
+                for i, v in obj_distance.items():
                     if 'PotatoSliced' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                        lowest_dict[i] =  v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                for i, v in dict1.items():
+                for i, v in obj_distance.items():
                     if 'Shelf' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
+                        lowest_dict[i] =  v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                # for i, v in dict1.items():
-                #     if 'Drawer' in i:
-                #         dict2.update({i: v})
-                # if not len(dict2) == 0:
-                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                #     list4.append(lowest)
-                #     dict2.clear()
-
-                # for i, v in dict1.items():
-                #     if 'StoveKnob' in i:
-                #         dict2.update({i: v})
-                # if not len(dict2) == 0:
-                #     lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                #     list4.append(lowest)
-                #     dict2.clear()
-
-                for i, v in dict1.items():
+                for i, v in obj_distance.items():
                     if 'TableTop' in i:
-                        dict2.update({i: v})
-                if not len(dict2) == 0:
-                    lowest = min(dict2.items(), key=operator.itemgetter(1))[0]
-                    list4.append(lowest)
-                    dict2.clear()
-                #
-                # list1 = [x for x in list1 if not re.search('StoveBurner', x)]
-                # list1 = [x for x in list1 if not re.search('StoveKnob', x)]
-
-                # list1 = [x for x in list1 if not re.search('Cabinet', x)]
-
-                list5 = [x for x in list5 if not re.search('CounterTop', x)]
-                list5 = [x for x in list5 if not re.search('Shelf', x)]
-                list5 = [x for x in list5 if not re.search('TableTop', x)]
-                # for i in list6:
-                #     if i =="BreadSliced":
-                #         list7.append(i)
-                # print(list7)
-                objects = objects + list5 + list4
-
+                        lowest_dict[i] =  v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
                 self.object_queue.put(objects)
                 stage = 'do_input'
@@ -844,7 +841,6 @@ class AI2THOR():
                     interaction = self.input_queue.get(0)
                     if interaction[0] == 'emphasis':
                         event = controller.step({"action": "EmphasizeObject", "objectId": interaction[1]})
-                        # event = controller.step({"action": "EmphasizeObject", "receptacleObjectId": interaction[1]})
                         # Send frame to GUI
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                         self.send_frame(ai2thor_frame)
@@ -853,107 +849,140 @@ class AI2THOR():
                         if interaction[1] == 'Break':
                             event = controller.step(dict(action='BreakObject', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("BreakObject")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("BreakObject")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Clean':
                             event = controller.step(dict(action='CleanObject', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("CleanObject")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("CleanObject")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Close':
                             event = controller.step(dict(action='CloseObject', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("CloseObject")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("CloseObject")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Dirty':
                             event = controller.step(dict(action='DirtyObject', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("DirtyObject")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("DirtyObject")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Drop':
                             event = controller.step(dict(action='DropHandObject'))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("DropHandObject")
+                                self.action_list.append("DropHandObject")
                         elif interaction[1] == 'Empty':
                             event = controller.step(dict(action='EmptyLiquidFromObject', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("EmptyLiquidFromObject")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("EmptyLiquidFromObject")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Fill':
                             event = controller.step(
                                 dict(action='FillObjectWithLiquid', objectId=interaction[2], fillLiquid=interaction[3]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("FillObjectWithLiquid")
-                                self.temp.append(interaction[2])
-                                self.temp.append(interaction[3])
+                                self.action_list.append("FillObjectWithLiquid")
+                                self.action_list.append(interaction[2])
+                                self.action_list.append(interaction[3])
                         elif interaction[1] == 'Open':
                             event = controller.step(dict(action='OpenObject', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("OpenObject")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("OpenObject")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Used up':
                             event = controller.step(dict(action='UseUpObject', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("UseUpObject")
+                                self.action_list.append("UseUpObject")
                         elif interaction[1] == 'Pick up':
                             event = controller.step(dict(action='PickupObject', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("PickupObject")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("PickupObject")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Pull':
                             event = controller.step(
                                 dict(action='PullObject', objectId=interaction[2], moveMagnitude=10.0))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("PullObject")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("PullObject")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Push':
                             event = controller.step(
                                 dict(action='PushObject', objectId=interaction[2], moveMagnitude=10.0))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("PushObject")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("PushObject")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Put down':
                             event = controller.step(
                                 dict(action='PutObject', objectId=interaction[2], receptacleObjectId=interaction[4],
                                      forceAction=True))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("PutObject")
-                                self.temp.append(interaction[2])
-                                self.temp.append(interaction[4])
+                                self.action_list.append("PutObject")
+                                self.action_list.append(interaction[2])
+                                self.action_list.append(interaction[4])
                         elif interaction[1] == 'Slice':
                             event = controller.step(dict(action='SliceObject', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("SliceObject")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("SliceObject")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Throw':
                             event = controller.step(dict(action='ThrowObject', moveMagnitude=100.0))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("ThrowObject")
+                                self.action_list.append("ThrowObject")
                         elif interaction[1] == 'Toggle off':
                             event = controller.step(dict(action='ToggleObjectOff', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("ToggleObjectOff")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("ToggleObjectOff")
+                                self.action_list.append(interaction[2])
                         elif interaction[1] == 'Toggle on':
                             event = controller.step(dict(action='ToggleObjectOn', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
-                                self.temp.append("ToggleObjectOn")
-                                self.temp.append(interaction[2])
+                                self.action_list.append("ToggleObjectOn")
+                                self.action_list.append(interaction[2])
                         # Send frame to GUI
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                         self.send_frame(ai2thor_frame)
                 except queue.Empty:
                     pass
+            elif stage == 'review':
+                with self.frame_queue.mutex:
+                    self.frame_queue.queue.clear()
+
+                # TODO: use task to set initial config for scene
+                controller.reset('FloorPlan' + scene)
+                event = controller.step(dict(action='Initialize', gridSize=0.25, renderObjectImage="True"))
+
+                # Send replay action frames to GUI
+                for action in self.action_list:
+                    # to check for user skipping replay video
+                    try:
+                        stage = self.stage_queue.get(0)
+                        break
+                    except queue.Empty:
+                        # check and do action
+                        if type(action) == 'str':
+                            event = controller.step(dict(action=action))
+                        elif type(action) == 'list':
+                            length = len(action)
+                            if length == 2:
+                                event = controller.step(dict(action=action[0], objectId=action[1]))
+                            elif length == 3:
+                                if action[0] == "FillObjectWithLiquid":
+                                    event = controller.step(
+                                    dict(action=action[0], objectId=action[1], fillLiquid=action[2]))
+                                elif action[0] == "PutObject":
+                                    event = controller.step(
+                                    dict(action=action[0], objectId=action[1], receptacleObjectId=action[2],
+                                        forceAction=True))
+
+                        ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                        self.send_frame(ai2thor_frame)
+                stage = 'pause'
             elif stage == 'pause':
-                self.temp.clear()
                 pass
             elif stage == 'save':
-                with open('actions.txt', 'r') as f:
-                    lines = f.readlines()
-                    lines1 = [x.replace('\n', '') for x in lines]
-                with open(lines1[0]+"_"+lines1[1], 'w') as f:
-                    f.write(str(lines1))
-                    f.write(str(self.temp))
+                with open('settings.txt', 'r') as f:
+                    settings = f.readlines()
+                    settings_list = [x.replace('\n', '') for x in settings]
+                with open("saved-tasks/" + settings_list[0] + "_" + settings_list[1], 'w') as f:
+                    f.write(str(settings_list))
+                    f.write(str(self.action_list))
                 f.close()
     def send_frame(self, frame):
         """Send frame to the frame_queue."""
