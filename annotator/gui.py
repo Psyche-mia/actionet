@@ -47,7 +47,7 @@ class UserIDPage(tk.Frame):
              frame_queue, object_queue, input_queue):
         # do not have to clear unused pages, since we only use this page once
         id_list = []
-        no_of_people = 50
+        no_of_people = 90
         for i in range(no_of_people):
             if len(str(i+1)) == 1:
                 id_list.append("00" + str(i+1))
@@ -116,7 +116,7 @@ class ChooseTaskPage(tk.Frame):
         with open("resources/tasks/" + user_id) as f:
             tasks = f.readlines()
         f.close()
-        print(tasks)
+        # print(tasks)
         SCENES = [
             "1",
             "2",
