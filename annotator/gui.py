@@ -952,8 +952,19 @@ class AI2THOR():
                 controller.reset('FloorPlan' + scene)
                 event = controller.step(dict(action='Initialize', gridSize=0.25, renderObjectImage="True"))
 
+                actions = str(self.action_list)
+                actions = actions.replace('[','')
+                actions = actions.replace(']','')
+                actions = actions.replace("'", '')
+                new_action_list =  actions.split(",")
+                new_action_list = [word.strip() for word in new_action_list]
+                a=0
+                anglehandx = 0.0
+                anglehandy = 0.0
+                anglehandz = 0.0
+
                 # Send replay action frames to GUI
-                for action in self.action_list:
+                for action in new_action_list:
                     # to check for user skipping replay video
                     try:
                         stage = self.stage_queue.get(0)
@@ -968,20 +979,28 @@ class AI2THOR():
                         break
                     except queue.Empty:
                         # check and do action
-                        if type(action) == 'str':
+                        if action == 'PickupObject' or action=='UseUpObject'or action=='EmptyLiquidFromObject' or action =='ToggleObjectOn' or action == 'ToggleObjectOff' or action== 'OpenObject' or action =='CloseObject' or action=='SliceObject' or action== 'BreakObject' or action== 'DirtyObject' or action=='CleanObject':
+                            event = controller.step(dict(action=action, objectId=new_action_list[a+1]))
+                        elif action == 'PutObject':
+                            event = controller.step(dict(action=action, objectId=new_action_list[a+1], receptacleObjectId=new_action_list[a+2]))
+                        elif action=='ThrowObject' or action=='PushObject' or action=='PullObject':
+                            event = controller.step(dict(action=action, moveMagnitude=100.0))
+                        elif action=='FillObjectWithLiquid':
+                            event = controller.step(dict(action=action, objectId=new_action_list[a+1], fillLiquid=new_action_list[a+2]))
+                        elif action=='RotateHandX':
+                            anglehandX=anglehandX+30.0
+                            event = controller.step(dict(action='RotateHand', x=anglehandX))
+                        elif action=='RotateHandY':
+                            anglehandY=anglehandY+30.0
+                            event = controller.step(dict(action='RotateHand', y=anglehandY))
+                        elif action=='RotateHandZ':
+                            anglehandZ=anglehandZ+30.0
+                            event = controller.step(dict(action='RotateHand', z=anglehandZ))
+                        elif action=='MoveHandAhead' or action=='MoveHandBack' or action =='MoveHandLeft' or action=='MoveHandRight' or action=='MoveHandUp' or action=='MoveHandDown':
+                            event = controller.step(dict(action=action, moveMagnitude=0.01))
+                        elif action=='MoveRight' or action=='MoveAhead' or action=='MoveLeft' or action=='MoveBack' or action=='RotateLeft' or action=='RotateRight' or action=='LookUp' or action=='LookDown':
                             event = controller.step(dict(action=action))
-                        elif type(action) == 'list':
-                            length = len(action)
-                            if length == 2:
-                                event = controller.step(dict(action=action[0], objectId=action[1]))
-                            elif length == 3:
-                                if action[0] == "FillObjectWithLiquid":
-                                    event = controller.step(
-                                    dict(action=action[0], objectId=action[1], fillLiquid=action[2]))
-                                elif action[0] == "PutObject":
-                                    event = controller.step(
-                                    dict(action=action[0], objectId=action[1], receptacleObjectId=action[2],
-                                        forceAction=True))
+                        a += 1
 
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                         self.send_frame(ai2thor_frame)

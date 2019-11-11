@@ -22,12 +22,6 @@ event = controller.step(dict(action='Initialize', gridSize=0.25,renderObjectImag
 
 task_list.pop(0)
 task_list.pop(0)
-
-# event = controller.step(dict(action='AddThirdPartyCamera', rotation=dict(x=0, y=0, z=0), position=dict(x=-1.0, z=-2.0, y=1.0)))
-# event = controller.step(dict(action='UpdateThirdPartyCamera',thirdPartyCameraId=0, rotation=dict(x=30, y=-240, z=0), position=dict(x=-3.0, z=3, y=2.5)))
-# event.third_party_camera_frames #
-# event.metadata['thirdPartyCameras']
-# print(event.metadata['agent'])# contains metadata about position/rotation of each camera
 a=0
 anglehandX = 0.0
 anglehandY = 0.0
