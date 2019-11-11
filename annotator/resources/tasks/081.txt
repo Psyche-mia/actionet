@@ -1,0 +1,22 @@
+Turn off the living room light_209_1
+Crack the window_209_1
+Open Blinds_303_1
+Clean the bed_303_1
+Keep sporting equipment_303_1
+Break the mirror_301_1
+Turn off all the bedroom light_301_1
+Clear the bed_301_1
+Close the blinds_301_1
+Put off a candle_412_1
+sink towel in water_412_1
+Fill the sink with water_412_1
+Clean the mirror_412_1
+Throw away used toilet roll and soap bottle_409_1
+Hand towel on towelholder_409_1
+Turn on shower head_409_1
+Break shower glass_409_1
+Keep valuable items in safe_308_1
+Water the houseplant_218_1
+Boil water with a kettle_5_1
+Fill up the bathtub with water_403_1
+Close the shower curtain_420_1

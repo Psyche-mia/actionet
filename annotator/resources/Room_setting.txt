@@ -1,0 +1,20 @@
+['Wash Dishes','Plate','Bowl','Dirty']
+['Throw away cracked egg','egg','cracked']
+['Throw away unused apple slice','apple','sliced']
+['Pour away coffee in a cup','coffee','cup',filled']
+['Pour away water from pot','water','cup',filled']
+['Use laptop','laptop','closed']
+['Throw away used tissuebox','tissuebox','closed']
+['Turn off the table lamp or desk lamp','desk_lamp','table_lamp','toggleon']
+['Open Blinds','Blinds','Closed']
+['Clean the bed','bed','dirty']
+['Clear the bed','bed','putobject']
+['Close the blinds','blinds','open']
+['Put off a candle','candle','toggleon']
+['Throw away used toilet roll and soap bottle','toilet_roll','soap_bottle','usedup']
+['Water the houseplant','Watering_Can','filled']
+
+
+
+
+
