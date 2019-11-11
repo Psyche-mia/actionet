@@ -957,6 +957,14 @@ class AI2THOR():
                     # to check for user skipping replay video
                     try:
                         stage = self.stage_queue.get(0)
+                        if stage == 'save':
+                            with open('settings.txt', 'r') as f:
+                                settings = f.readlines()
+                                settings_list = [x.replace('\n', '') for x in settings]
+                            with open("saved-tasks/" + settings_list[0] + "_" + settings_list[1], 'w') as f:
+                                f.write(str(settings_list))
+                                f.write(str(self.action_list))
+                            f.close()
                         break
                     except queue.Empty:
                         # check and do action
@@ -977,14 +985,6 @@ class AI2THOR():
 
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                         self.send_frame(ai2thor_frame)
-            elif stage == 'save':
-                with open('settings.txt', 'r') as f:
-                    settings = f.readlines()
-                    settings_list = [x.replace('\n', '') for x in settings]
-                with open("saved-tasks/" + settings_list[0] + "_" + settings_list[1], 'w') as f:
-                    f.write(str(settings_list))
-                    f.write(str(self.action_list))
-                f.close()
     def send_frame(self, frame):
         """Send frame to the frame_queue."""
         self.frame_queue.put(frame)
