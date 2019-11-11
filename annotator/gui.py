@@ -47,7 +47,8 @@ class UserIDPage(tk.Frame):
              frame_queue, object_queue, input_queue):
         # do not have to clear unused pages, since we only use this page once
         id_list = []
-        for i in range(100):
+        no_of_people = 50
+        for i in range(no_of_people):
             if len(str(i+1)) == 1:
                 id_list.append("00" + str(i+1))
             elif len(str(i+1)) == 2:
@@ -73,7 +74,7 @@ class UserIDPage(tk.Frame):
              frame_queue, object_queue, input_queue):
         if str(uid) not in id_list:
             # id not in list --> show popup error message
-            messagebox.showerror("Error", "Please make sure you enter a valid user ID, from 001 to 100.")
+            messagebox.showerror("Error", "Please make sure you enter a valid user ID, from 001 to " + id_list[-1] + ".")
         else:
             # valid id --> move to task choosing page
             choose_task = ChooseTaskPage(root)
@@ -112,6 +113,10 @@ class ChooseTaskPage(tk.Frame):
         self.ai2thor_frame.pack(side="top")
         # Select scene
         # TODO: Select possible scenes for specific users --> using 'user_id'
+        with open("resources/tasks/" + user_id) as f:
+            tasks = f.readlines()
+        f.close()
+        print(tasks)
         SCENES = [
             "1",
             "2",
@@ -646,7 +651,6 @@ class AI2THOR():
                         frame = Image.fromarray(frame).resize((880,880))
                         self.demo_queue.put(frame)
                         time.sleep(.03)
-                stage = 'pause'
             elif stage == 'do_action':
                 # Send frame(s) to GUI
                 if keyboard.is_pressed('right'):
@@ -973,9 +977,6 @@ class AI2THOR():
 
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                         self.send_frame(ai2thor_frame)
-                stage = 'pause'
-            elif stage == 'pause':
-                pass
             elif stage == 'save':
                 with open('settings.txt', 'r') as f:
                     settings = f.readlines()
