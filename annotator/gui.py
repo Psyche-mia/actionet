@@ -56,15 +56,9 @@ class UserIDPage(tk.Frame):
              frame_queue, object_queue, input_queue):
         # do not have to clear unused pages, since we only use this page once
         id_list = []
-        no_of_people = 90
+        no_of_people = 100
         for i in range(no_of_people):
             id_list.append(str(i + 1))
-            # if len(str(i + 1)) == 1:
-            #     id_list.append("00" + str(i + 1))
-            # elif len(str(i + 1)) == 2:
-            #     id_list.append("0" + str(i + 1))
-            # elif len(str(i + 1)) == 3:
-            #     id_list.append(str(i + 1))
 
         user_num_frame = tk.Frame(self)
         user_num_frame.pack(side="top")
@@ -90,7 +84,7 @@ class UserIDPage(tk.Frame):
         if str(uid) not in id_list:
             # id not in list --> show popup error message
             messagebox.showerror("Error",
-                                 "Please make sure you enter a valid user ID, from 001 to " + id_list[-1] + ".")
+                                 "Please make sure you enter a valid user ID, from 1 to " + id_list[-1] + ".")
         else:
             # valid id --> move to task choosing page
             choose_task = ChooseTaskPage(root)
@@ -132,58 +126,57 @@ class ChooseTaskPage(tk.Frame):
         self.ai2thor_frame = tk.Label(self)
         self.get_and_set_frame()
         self.ai2thor_frame.pack(side="top")
-        # Select scene
-        # TODO: Select possible scenes for specific users --> using 'user_id'
-        # with open("resources/tasks/" + user_id) as f:
-        #     tasks = f.readlines()
-        # f.close()
 
-        SCENES = []
-        TASKS = []
-        with open(str(self.user_id)+'.csv', newline='') as csvfile:
-            spamreader = csv.reader(csvfile)
-            for row in spamreader:
-                result = ', '.join(row)
-                result = ''.join([i for i in result if not i.isdigit()])
-                result = result.replace("_", "")
-                TASKS.append(result)
-                result1 = ', '.join(row)
-                result1 = re.sub('[^0-9]', '', result1)
-                if result1.endswith("0"):
-                    result1 = ''.join(result.split())
-                    result1 = result1[:-2]
-                else:
-                    result1 = ''.join(result1.split())
-                    result1 = result1[:-1]
-                SCENES.append(result1)
+        # TODO: Select tasks for specific users --> using 'user_id'
 
-        scene_frame = tk.Frame(self)
-        scene_frame.pack(side="top")
-        scene_text = tk.Label(self, text="Choose scene:")
-        scene_text.pack(in_=scene_frame, side="left")
-        scene_text.config(font=('Courier', '20'))
-        self.scene = tk.StringVar(self)
-        self.scene.set(SCENES[0])
-        self.scene_queue.put(SCENES[0])
-        self.scene.trace("w", self.send_scene)
-        scene_options = Combobox(self, textvariable=self.scene, state="readonly", values=SCENES, font=('Courier', '20'))
-        scene_options.pack(in_=scene_frame, side="left")
-        # TODO: Select task for specific users --> using 'user_id'
+        self.SCENES = []
+        self.TASKS = []
+        with open('resources/tasks/' + str(self.user_id)+'.csv', newline='') as csvfile:
+            csv_data = csv.reader(csvfile)
+            for row in csv_data:
+                task_data = ', '.join(row)
+                task_data = ''.join([i for i in task_data if not i.isdigit()])
+                task_data = task_data.replace("_", "")
+                self.TASKS.append(task_data)
+
+                scene = ', '.join(row)
+                scene = scene.split('_')[-2]
+                self.SCENES.append(scene)
+
+        # scene_frame = tk.Frame(self)
+        # scene_frame.pack(side="top")
+        # scene_text = tk.Label(self, text="Choose scene:")
+        # scene_text.pack(in_=scene_frame, side="left")
+        # scene_text.config(font=('Courier', '20'))
+        # self.scene = tk.StringVar(self)
+        # self.scene.set(SCENES[0])
+        # self.scene_queue.put(SCENES[0])
+        # self.scene.trace("w", self.send_scene)
+        # scene_options = Combobox(self, textvariable=self.scene, state="readonly", values=SCENES, font=('Courier', '20'))
+        # scene_options.pack(in_=scene_frame, side="left")
+
         task_frame = tk.Frame(self)
         task_frame.pack(side="top")
         task_text = tk.Label(self, text="Choose task:")
         task_text.pack(in_=task_frame, side="left")
         task_text.config(font=('Courier', '20'))
-        task = tk.StringVar(self)
-        task.set(TASKS[0])
-        task_options = Combobox(self, textvariable=task, state="readonly", values=TASKS, font=('Courier', '20'))
+        self.task = tk.StringVar(self)
+        self.task.set(self.TASKS[0])
+
+        # set initial scene
+        index = self.TASKS.index(self.task.get())
+        self.scene = self.SCENES[0]
+        self.scene_queue.put(self.scene)
+
+        self.task.trace("w", self.send_scene)
+        task_options = Combobox(self, textvariable=self.task, state="readonly", values=self.TASKS, font=('Courier', '20'))
         task_options.pack(in_=task_frame, side="left")
         # Create start task button
         demo = DemoPage(root)
         demo.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
         demo_button = tk.Button(self, text="WATCH DEMO", font=('Courier', '19'),
-                                command=lambda: demo.show(root, container, user_id, status, task.get(),
-                                                          self.scene.get(), choose_task, demo, None,
+                                command=lambda: demo.show(root, container, user_id, status, self.task.get(),
+                                                          self.scene, choose_task, demo, None,
                                                           None, None, stage_queue, scene_queue, demo_queue, frame_queue,
                                                           object_queue, input_queue,
                                                           self.ai2thor_frame.image))
@@ -192,7 +185,9 @@ class ChooseTaskPage(tk.Frame):
 
     def send_scene(self, *args):
         """Get scene in the scene options and send to scene_queue."""
-        self.scene_queue.put(self.scene.get())
+        index = self.TASKS.index(self.task.get())
+        self.scene = self.SCENES[index]
+        self.scene_queue.put(self.scene)
 
     def get_and_set_frame(self):
         """Get first frame in the frame_queue, if any, and set the GUI frame to that frame."""
