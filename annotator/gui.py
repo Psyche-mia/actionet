@@ -12,7 +12,7 @@ import operator
 from tkinter.ttk import *
 from tkinter import messagebox
 import csv
-
+import ast
 
 class Gui():
     """
@@ -28,7 +28,6 @@ class Gui():
         frame_queue = queue.Queue()
         object_queue = queue.Queue()
         input_queue = queue.Queue()
-        temp = []
         # Show status
         status = tk.Label(root, text="STATUS: Entering user ID...\n")
         status.pack(side="top", fill="x")
@@ -36,7 +35,7 @@ class Gui():
         container = tk.Frame(root)
         container.pack(side="top", fill="both", expand=True)
         # Instantiate AI2-THOR with queues
-        ai2_thor = AI2THOR(stage_queue, scene_queue, demo_queue, frame_queue, object_queue, input_queue, temp, status)
+        ai2_thor = AI2THOR(stage_queue, scene_queue, demo_queue, frame_queue, object_queue, input_queue)
         ai2_thor_thread = threading.Thread(target=lambda: ai2_thor.run())
         ai2_thor_thread.start()
         # Set initial page to choose task page
@@ -127,7 +126,7 @@ class ChooseTaskPage(tk.Frame):
         self.get_and_set_frame()
         self.ai2thor_frame.pack(side="top")
 
-        # TODO: Select tasks for specific users --> using 'user_id'
+        # Select tasks for specific users --> using 'user_id'
 
         self.SCENES = []
         self.TASKS = []
@@ -143,18 +142,6 @@ class ChooseTaskPage(tk.Frame):
                 scene = scene.split('_')[-2]
                 self.SCENES.append(scene)
 
-        # scene_frame = tk.Frame(self)
-        # scene_frame.pack(side="top")
-        # scene_text = tk.Label(self, text="Choose scene:")
-        # scene_text.pack(in_=scene_frame, side="left")
-        # scene_text.config(font=('Courier', '20'))
-        # self.scene = tk.StringVar(self)
-        # self.scene.set(SCENES[0])
-        # self.scene_queue.put(SCENES[0])
-        # self.scene.trace("w", self.send_scene)
-        # scene_options = Combobox(self, textvariable=self.scene, state="readonly", values=SCENES, font=('Courier', '20'))
-        # scene_options.pack(in_=scene_frame, side="left")
-
         task_frame = tk.Frame(self)
         task_frame.pack(side="top")
         task_text = tk.Label(self, text="Choose task:")
@@ -164,7 +151,6 @@ class ChooseTaskPage(tk.Frame):
         self.task.set(self.TASKS[0])
 
         # set initial scene
-        index = self.TASKS.index(self.task.get())
         self.scene = self.SCENES[0]
         self.scene_queue.put(self.scene)
 
@@ -222,7 +208,6 @@ class DemoPage(tk.Frame):
         if review != None:
             review.destroy()
 
-        stage_queue.put('demo')
         self.demo_queue = demo_queue
 
         # write task and scene settings to draw it later
@@ -230,6 +215,33 @@ class DemoPage(tk.Frame):
             f.truncate(0)
             f.write(task + "\n")
             f.write("FloorPlan" + scene)
+        f.close()
+
+        # set initial config for scene
+        config_task_list = [
+            'Wash Dishes',
+            'Throw away cracked egg',
+            'Throw away unused apple slice',
+            'Pour away coffee in a cup',
+            'Pour away water from pot',
+            'Use laptop',
+            'Throw away used tissuebox',
+            'Turn off the table lamp or desk lamp',
+            'Open Blinds',
+            'Clean the bed',
+            'Close the blinds',
+            'Put off a candle',
+            'Throw away used toilet roll and soap bottle',
+            'Water the houseplant'
+        ]
+
+        if task in config_task_list:
+            index = config_task_list.index(task)
+        else:
+            index = -1
+        scene_queue.put(int(index))
+
+        stage_queue.put('demo')
 
         # Show status
         status['text'] = "STATUS: Watching the demo video...\n"
@@ -239,10 +251,10 @@ class DemoPage(tk.Frame):
         instruction_label.pack(side="top")
         instruction_label.config(font=("Courier Bold", 14))
 
-        # # show demo video
-        self.demo_frame = tk.Label(self)
-        self.get_and_set_demo_video()
-        self.demo_frame.pack(side="top")
+        # show demo video
+        # self.demo_frame = tk.Label(self)
+        # self.get_and_set_demo_video()
+        # self.demo_frame.pack(side="top")
 
         do_action = DoActionPage(root)
         do_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
@@ -643,9 +655,7 @@ class ReviewPage(tk.Frame):
 
 
 class AI2THOR():
-    def __init__(self, stage_queue, scene_queue, demo_queue, frame_queue, object_queue, input_queue, temp, status):
-        self.temp = temp
-        self.status = status
+    def __init__(self, stage_queue, scene_queue, demo_queue, frame_queue, object_queue, input_queue):
         self.stage_queue = stage_queue
         self.scene_queue = scene_queue
         self.demo_queue = demo_queue
@@ -656,6 +666,7 @@ class AI2THOR():
     def run(self):
         """Run AI2-THOR."""
         controller = ai2thor.controller.Controller()
+        controller.local_executable_path = "/home/samson/Documents/github/allenai/ai2thor/unity/Builds/linux.x86_64"
         controller.start(player_screen_width=1000,
                          player_screen_height=500)
         anglehandx = 0.0
@@ -693,14 +704,108 @@ class AI2THOR():
                 video = imageio.get_reader(video_name)
 
                 for frame in video.iter_data():
-                    # to check for user skipping demo video
+                    # see whether initial scene config is ready
                     try:
-                        stage = self.stage_queue.get(0)
-                        break
-                    except queue.Empty:
-                        frame = Image.fromarray(frame).resize((880, 880))
-                        self.demo_queue.put(frame)
-                        time.sleep(.03)
+                        scene_config = self.scene_queue.get(0)
+                        first_target_id = None
+                        second_target_id = None
+                        if scene_config == 0:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'Plate':
+                                    first_target_id = obj['objectId']
+                                elif obj['objectType'] == 'Bowl':
+                                    second_target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='DirtyObject', objectId=first_target_id))
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='DirtyObject', objectId=second_target_id))
+                        elif scene_config == 1:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'Egg':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='BreakObject', objectId=first_target_id))
+                        elif scene_config == 2:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'Apple':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='SliceObject', objectId=first_target_id))
+                        elif scene_config == 3:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'Cup':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=first_target_id, fillLiquid='coffee'))
+                        elif scene_config == 4:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'Cup':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=first_target_id, fillLiquid='water'))
+                        elif scene_config == 5:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'Laptop':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="CloseObject", objectId=first_target_id))
+                        elif scene_config == 6:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'TissueBox':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="UseUpObject", objectId=first_target_id))
+                        elif scene_config == 7:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'DeskLamp':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="ToggleObjectOn", objectId=first_target_id))
+                        elif scene_config == 8:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'Blinds':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="CloseObject", objectId=first_target_id))
+                        elif scene_config == 9:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'Bed':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='DirtyObject', objectId=first_target_id))
+                        elif scene_config == 10:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'Blinds':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="OpenObject", objectId=first_target_id))
+                        elif scene_config == 11:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'Candle':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="ToggleObjectOn", objectId=first_target_id))
+                        elif scene_config == 12:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'ToiletPaper':
+                                    first_target_id = obj['objectId']
+                                elif obj['objectType'] == 'SoapBottle':
+                                    second_target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="UseUpObject", objectId=first_target_id))
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="UseUpObject", objectId=second_target_id))
+                        elif scene_config == 13:
+                            for obj in event.metadata['objects']:
+                                if obj['objectType'] == 'WateringCan':
+                                    first_target_id = obj['objectId']
+                                    break
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=first_target_id, fillLiquid='water'))
+                    except:
+                        # to check for user skipping demo video
+                        try:
+                            stage = self.stage_queue.get(0)
+                            break
+                        except queue.Empty:
+                            frame = Image.fromarray(frame).resize((880, 880))
+                            self.demo_queue.put(frame)
+                            time.sleep(.03)
             elif stage == 'do_action':
                 # Send frame(s) to GUI
 
