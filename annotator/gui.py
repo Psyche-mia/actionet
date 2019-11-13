@@ -12,7 +12,6 @@ import operator
 from tkinter.ttk import *
 from tkinter import messagebox
 import csv
-import ast
 
 class Gui():
     """
