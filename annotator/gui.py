@@ -131,13 +131,13 @@ class ChooseTaskPage(tk.Frame):
         self.TASKS = []
         with open('resources/tasks/' + str(self.user_id)+'.csv', newline='') as csvfile:
             csv_data = csv.reader(csvfile)
+            next(csv_data)
             for row in csv_data:
-                task_data = ', '.join(row)
-                task_data = ''.join([i for i in task_data if not i.isdigit()])
-                task_data = task_data.replace("_", "")
+                task_data = ''.join(row)
+                task_data = task_data.split("_")[0]
                 self.TASKS.append(task_data)
 
-                scene = ', '.join(row)
+                scene = ''.join(row)
                 scene = scene.split('_')[-2]
                 self.SCENES.append(scene)
 
@@ -310,9 +310,10 @@ class DoActionPage(tk.Frame):
 
         # Show frame(s)
         self.ai2thor_frame = tk.Label(self)
-        self.ai2thor_frame.configure(image=initial_frame)
-        self.ai2thor_frame.image = initial_frame
+        # self.ai2thor_frame.configure(image=initial_frame)
+        # self.ai2thor_frame.image = initial_frame
         self.ai2thor_frame.pack(side="top")
+        self.get_and_set_frame()
 
         # TODO: change instruction according to 'task'
         # f = open("resources/task-descriptions.txt", "r")
@@ -371,7 +372,6 @@ class DoActionPage(tk.Frame):
         finish_task_button.pack(side="bottom", fill="x", expand=False)
 
         self.lift()
-        self.get_and_set_frame()
 
     def get_and_set_frame(self):
         """Get first frame in the frame_queue, if any, and set the GUI frame to that frame."""
@@ -706,96 +706,81 @@ class AI2THOR():
                     # see whether initial scene config is ready
                     try:
                         scene_config = self.scene_queue.get(0)
-                        first_target_id = None
-                        second_target_id = None
-                        if scene_config == 0:
+                        target_id = None
+                        if scene_config == -1:
+                            pass
+                        elif scene_config == 0:
                             for obj in event.metadata['objects']:
-                                if obj['objectType'] == 'Plate':
-                                    first_target_id = obj['objectId']
-                                elif obj['objectType'] == 'Bowl':
-                                    second_target_id = obj['objectId']
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='DirtyObject', objectId=first_target_id))
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='DirtyObject', objectId=second_target_id))
+                                if obj['objectType'] == 'Plate' or obj['objectType'] == 'Bowl':
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='DirtyObject', objectId=target_id))
                         elif scene_config == 1:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'Egg':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='BreakObject', objectId=first_target_id))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='BreakObject', objectId=target_id))
                         elif scene_config == 2:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'Apple':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='SliceObject', objectId=first_target_id))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='SliceObject', objectId=target_id))
                         elif scene_config == 3:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'Cup':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=first_target_id, fillLiquid='coffee'))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=target_id, fillLiquid='coffee'))
                         elif scene_config == 4:
                             for obj in event.metadata['objects']:
-                                if obj['objectType'] == 'Cup':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=first_target_id, fillLiquid='water'))
+                                if obj['objectType'] == 'Pot':
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=target_id, fillLiquid='water'))
                         elif scene_config == 5:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'Laptop':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="CloseObject", objectId=first_target_id))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="CloseObject", objectId=target_id))
                         elif scene_config == 6:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'TissueBox':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="UseUpObject", objectId=first_target_id))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="UseUpObject", objectId=target_id))
                         elif scene_config == 7:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'DeskLamp':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="ToggleObjectOn", objectId=first_target_id))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="ToggleObjectOn", objectId=target_id))
                         elif scene_config == 8:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'Blinds':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="CloseObject", objectId=first_target_id))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="CloseObject", objectId=target_id))
                         elif scene_config == 9:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'Bed':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='DirtyObject', objectId=first_target_id))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='DirtyObject', objectId=target_id))
                         elif scene_config == 10:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'Blinds':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="OpenObject", objectId=first_target_id))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="OpenObject", objectId=target_id))
                         elif scene_config == 11:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'Candle':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="ToggleObjectOn", objectId=first_target_id))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="ToggleObjectOn", objectId=target_id))
                         elif scene_config == 12:
                             for obj in event.metadata['objects']:
-                                if obj['objectType'] == 'ToiletPaper':
-                                    first_target_id = obj['objectId']
-                                elif obj['objectType'] == 'SoapBottle':
-                                    second_target_id = obj['objectId']
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="UseUpObject", objectId=first_target_id))
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="UseUpObject", objectId=second_target_id))
+                                if obj['objectType'] == 'ToiletPaper' or obj['objectType'] == 'SoapBottle':
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="UseUpObject", objectId=target_id))
                         elif scene_config == 13:
                             for obj in event.metadata['objects']:
                                 if obj['objectType'] == 'WateringCan':
-                                    first_target_id = obj['objectId']
-                                    break
-                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=first_target_id, fillLiquid='water'))
+                                    target_id = obj['objectId']
+                                    event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=target_id, fillLiquid='water'))
+                        ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                        self.send_frame(ai2thor_frame)
                     except:
                         # to check for user skipping demo video
                         try:
@@ -807,7 +792,6 @@ class AI2THOR():
                             time.sleep(.03)
             elif stage == 'do_action':
                 # Send frame(s) to GUI
-
                 if keyboard.is_pressed('right'):
                     event = controller.step(dict(action='MoveRight'))
                     ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
@@ -1103,9 +1087,136 @@ class AI2THOR():
                 with self.frame_queue.mutex:
                     self.frame_queue.queue.clear()
 
-                # TODO: use task to set initial config for scene
+                # use task to set initial config for scene
                 controller.reset('FloorPlan' + scene)
                 event = controller.step(dict(action='Initialize', gridSize=0.25, renderObjectImage="True"))
+
+                # set initial config for scene
+                config_task_list = [
+                    'Wash Dishes',
+                    'Throw away cracked egg',
+                    'Throw away unused apple slice',
+                    'Pour away coffee in a cup',
+                    'Pour away water from pot',
+                    'Use laptop',
+                    'Throw away used tissuebox',
+                    'Turn off the table lamp or desk lamp',
+                    'Open Blinds',
+                    'Clean the bed',
+                    'Close the blinds',
+                    'Put off a candle',
+                    'Throw away used toilet roll and soap bottle',
+                    'Water the houseplant'
+                ]
+
+                with open('settings.txt', 'r') as f:
+                    settings = f.readlines()
+                    settings_list = [x.replace('\n', '') for x in settings]
+                if settings_list[0] in config_task_list:
+                    scene_config = config_task_list.index(settings_list[0])
+                else:
+                    scene_config = -1
+                f.close()
+
+                if scene_config == -1:
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 0:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'Plate' or obj['objectType'] == 'Bowl':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='DirtyObject', objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 1:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'Egg':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='BreakObject', objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 2:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'Apple':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='SliceObject', objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 3:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'Cup':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=target_id, fillLiquid='coffee'))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 4:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'Pot':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=target_id, fillLiquid='water'))
+                elif scene_config == 5:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'Laptop':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="CloseObject", objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 6:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'TissueBox':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="UseUpObject", objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 7:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'DeskLamp':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="ToggleObjectOn", objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 8:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'Blinds':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="CloseObject", objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 9:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'Bed':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange='DirtyObject', objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 10:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'Blinds':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="OpenObject", objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 11:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'Candle':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="ToggleObjectOn", objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 12:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'ToiletPaper' or obj['objectType'] == 'SoapBottle':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="UseUpObject", objectId=target_id))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
+                elif scene_config == 13:
+                    for obj in event.metadata['objects']:
+                        if obj['objectType'] == 'WateringCan':
+                            target_id = obj['objectId']
+                            event = controller.step(dict(action='SpecificToggleSpecificState', StateChange="FillObjectWithLiquid", objectId=target_id, fillLiquid='water'))
+                    ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
+                    self.send_frame(ai2thor_frame)
 
                 actions = str(self.action_list)
                 actions = actions.replace('[', '')

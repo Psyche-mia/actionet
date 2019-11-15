@@ -2,7 +2,7 @@
 ['2','Throw away cracked egg','egg','cracked']
 ['3','Throw away unused apple slice','apple','sliced']
 ['4','Pour away coffee in a cup','coffee','cup','filled']
-['5','Pour away water from pot','water','cup','filled']
+['5','Pour away water from pot','water','pot','filled']
 ['6','Use laptop','laptop','closed']
 ['7','Throw away used tissuebox','tissuebox','usedup']
 ['8','Turn off the desk lamp','desk_lamp','toggleon']

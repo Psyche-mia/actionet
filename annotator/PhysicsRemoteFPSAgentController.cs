@@ -3510,6 +3510,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 errorMessage = "Missing State parameter. Please use valid State";
                 actionFinished(false);
+                return;
             }
 
             if (action.StateChange == "BreakObject"){
@@ -3662,6 +3663,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     errorMessage = "Missing Liquid string for FillObject action";
                     actionFinished(false);
+                    return;
                 }
 
                 SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
@@ -3738,11 +3740,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     action.forceVisible = true;
                 }
 
-                if (!action.forceAction && target.isInteractable == false) {
-                    errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    actionFinished(false);
-                }
-
                 if (target.GetComponent<CanOpen_Object>()) {
                     CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
@@ -3750,11 +3747,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (codd.isOpen) {
                         // codd.Interact();
                         // actionFinished(true);
-                        StartCoroutine(InteractAndWait(codd));
+                        codd.Interact();
+                        actionFinished(true);
+                        return;
                     } else {
                         errorMessage = "object already closed: " + action.objectId;
                         actionFinished(false);
+                        return;
                     }
+                } else {
+                    errorMessage = "Please make sure object can be opened and closed";
+                    actionFinished(false);
+                    return;
                 }
             }
             else if(action.StateChange == "ToggleObjectOn"){
@@ -3762,7 +3766,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     errorMessage = "objectId required for ToggleObject";
                     actionFinished(false);
-                    //return false;
+                    return;
                 }
 
                 if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
@@ -3780,7 +3784,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     errorMessage = "objectId required for ToggleObject";
                     actionFinished(false);
-                    //return false;
+                    return;
                 }
 
                 if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
@@ -3815,12 +3819,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     action.forceVisible = true;
                 }
 
-                if (!action.forceAction && target.isInteractable == false) {
-                    actionFinished(false);
-                    errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    return;
-                }
-
                 if (target.GetComponent<CanOpen_Object>()) {
                     CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
@@ -3848,13 +3846,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return;
                         }
                     }
+                    codd.Interact();
+                    actionFinished(true);
+                    return;
 
-                    //XXX: So if we want to generate metadata at specific parts of the animation, this
-                    //coroutine will need some tweaking. Basically we need to send emit frames after some number of yield
-                    //return null calls in the loop that's tracking iTween instances? We will figure that out later but
-                    //for future notice I'm leaving this note.
-                    StartCoroutine(InteractAndWait(codd));
-
+                } else {
+                    errorMessage = "Please make sure object can be opened and closed";
+                    actionFinished(false);
+                    return;
                 }
             }
             else if(action.StateChange == "UseUpObject"){
