@@ -119,7 +119,7 @@ class ChooseTaskPage(tk.Frame):
         self.scene_queue = scene_queue
         self.frame_queue = frame_queue
         self.user_id=user_id
-        status['text'] = "STATUS: Choosing scene and task...\n"
+        status['text'] = "STATUS: Choosing task...\n"
         # Show initial frame
         self.ai2thor_frame = tk.Label(self)
         self.get_and_set_frame()
@@ -129,17 +129,27 @@ class ChooseTaskPage(tk.Frame):
 
         self.SCENES = []
         self.TASKS = []
+        if os.path.exists('saved-tasks/' + str(self.user_id)):
+            completed_tasks = os.listdir('saved-tasks/' + str(self.user_id))
+            completed_tasks = [x.split('_')[0] for x in completed_tasks]
+        else:
+            completed_tasks = []
         with open('resources/tasks/' + str(self.user_id)+'.csv', newline='') as csvfile:
             csv_data = csv.reader(csvfile)
             next(csv_data)
             for row in csv_data:
                 task_data = ''.join(row)
                 task_data = task_data.split("_")[0]
-                self.TASKS.append(task_data)
+                if task_data not in completed_tasks:
+                    self.TASKS.append(task_data)
 
-                scene = ''.join(row)
-                scene = scene.split('_')[-2]
-                self.SCENES.append(scene)
+                    scene = ''.join(row)
+                    scene = scene.split('_')[-2]
+                    self.SCENES.append(scene)
+        with open('saved-tasks/user.txt', 'w') as f:
+            f.truncate(0)
+            f.write(str(self.user_id))
+        f.close()
 
         task_frame = tk.Frame(self)
         task_frame.pack(side="top")
@@ -210,7 +220,7 @@ class DemoPage(tk.Frame):
         self.demo_queue = demo_queue
 
         # write task and scene settings to draw it later
-        with open('settings.txt', 'w') as f:
+        with open('saved-tasks/settings.txt', 'w') as f:
             f.truncate(0)
             f.write(task + "\n")
             f.write("FloorPlan" + scene)
@@ -306,7 +316,7 @@ class DoActionPage(tk.Frame):
         stage_queue.put('do_action')
         # Show status
         status[
-            'text'] = "STATUS: Doing '" + task + "' task in Scene " + scene + "...\n"
+            'text'] = "STATUS: Doing '" + task + "' task in FloorPlan" + scene + "...\n"
 
         # Show frame(s)
         self.ai2thor_frame = tk.Label(self)
@@ -413,7 +423,7 @@ class DoInputPage(tk.Frame):
         self.input_queue = input_queue
         # Change status
         status[
-            'text'] = "STATUS: Interacting with object for '" + task + "' task in Scene " + scene + "...\n"
+            'text'] = "STATUS: Interacting with object for '" + task + "' task in FloorPlan" + scene + "...\n"
         # Show initial frame
         self.ai2thor_frame = tk.Label(self)
         self.ai2thor_frame.configure(image=initial_frame)
@@ -607,7 +617,7 @@ class ReviewPage(tk.Frame):
             do_input.destroy()
 
         stage_queue.put('review')
-        status['text'] = "STATUS: Reviewing actions for '" + task + "' task for Scene " + scene + "...\n"
+        status['text'] = "STATUS: Reviewing actions for '" + task + "' task for FloorPlan" + scene + "...\n"
 
         self.frame_queue = frame_queue
 
@@ -921,45 +931,45 @@ class AI2THOR():
                     objects.append(lowest)
                     lowest_dict.clear()
 
-                for i, v in obj_distance.items():
-                    if 'BreadSliced' in i:
-                        lowest_dict[i] = v
-                if not len(lowest_dict) == 0:
-                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
-                    objects.append(lowest)
-                    lowest_dict.clear()
+                # for i, v in obj_distance.items():
+                #     if 'BreadSliced' in i:
+                #         lowest_dict[i] = v
+                # if not len(lowest_dict) == 0:
+                #     lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                #     objects.append(lowest)
+                #     lowest_dict.clear()
 
-                for i, v in obj_distance.items():
-                    if 'TomatoSliced' in i:
-                        lowest_dict[i] = v
-                if not len(lowest_dict) == 0:
-                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
-                    objects.append(lowest)
-                    lowest_dict.clear()
+                # for i, v in obj_distance.items():
+                #     if 'TomatoSliced' in i:
+                #         lowest_dict[i] = v
+                # if not len(lowest_dict) == 0:
+                #     lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                #     objects.append(lowest)
+                #     lowest_dict.clear()
 
-                for i, v in obj_distance.items():
-                    if 'AppleSliced' in i:
-                        lowest_dict[i] = v
-                if not len(lowest_dict) == 0:
-                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
-                    objects.append(lowest)
-                    lowest_dict.clear()
+                # for i, v in obj_distance.items():
+                #     if 'AppleSliced' in i:
+                #         lowest_dict[i] = v
+                # if not len(lowest_dict) == 0:
+                #     lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                #     objects.append(lowest)
+                #     lowest_dict.clear()
 
-                for i, v in obj_distance.items():
-                    if 'LettuceSliced' in i:
-                        lowest_dict[i] = v
-                if not len(lowest_dict) == 0:
-                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
-                    objects.append(lowest)
-                    lowest_dict.clear()
+                # for i, v in obj_distance.items():
+                #     if 'LettuceSliced' in i:
+                #         lowest_dict[i] = v
+                # if not len(lowest_dict) == 0:
+                #     lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                #     objects.append(lowest)
+                #     lowest_dict.clear()
 
-                for i, v in obj_distance.items():
-                    if 'PotatoSliced' in i:
-                        lowest_dict[i] = v
-                if not len(lowest_dict) == 0:
-                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
-                    objects.append(lowest)
-                    lowest_dict.clear()
+                # for i, v in obj_distance.items():
+                #     if 'PotatoSliced' in i:
+                #         lowest_dict[i] = v
+                # if not len(lowest_dict) == 0:
+                #     lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                #     objects.append(lowest)
+                #     lowest_dict.clear()
 
                 for i, v in obj_distance.items():
                     if 'Shelf' in i:
@@ -1109,7 +1119,7 @@ class AI2THOR():
                     'Water the houseplant'
                 ]
 
-                with open('settings.txt', 'r') as f:
+                with open('saved-tasks/settings.txt', 'r') as f:
                     settings = f.readlines()
                     settings_list = [x.replace('\n', '') for x in settings]
                 if settings_list[0] in config_task_list:
@@ -1235,10 +1245,14 @@ class AI2THOR():
                     try:
                         stage = self.stage_queue.get(0)
                         if stage == 'save':
-                            with open('settings.txt', 'r') as f:
+                            with open('saved-tasks/settings.txt', 'r') as f:
                                 settings = f.readlines()
                                 settings_list = [x.replace('\n', '') for x in settings]
-                            with open("saved-tasks/" + settings_list[0] + "_" + settings_list[1], 'w') as f:
+                            with open('saved-tasks/user.txt', 'r') as f:
+                                user_id = f.readline()
+                                if not os.path.exists("saved-tasks/" + str(user_id)):
+                                    os.mkdir("saved-tasks/" + str(user_id))
+                            with open("saved-tasks/" + str(user_id) + '/' + settings_list[0] + "_" + settings_list[1], 'w') as f:
                                 f.write(str(settings_list))
                                 f.write(str(self.action_list))
                             f.close()
