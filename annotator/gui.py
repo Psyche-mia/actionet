@@ -76,18 +76,24 @@ class UserIDPage(tk.Frame):
         check_id_validity_button.pack(side="top")
         self.lift()
 
-    def check_id_validity(self, uid, id_list, root, container, status, user_num, choose_task, choose_action, do_action,
+    def check_id_validity(self, user_id, id_list, root, container, status, user_num, choose_task, choose_action, do_action,
                           do_input, review, stage_queue, scene_queue, demo_queue,
                           frame_queue, object_queue, input_queue):
-        if str(uid) not in id_list:
+        if str(user_id) not in id_list:
             # id not in list --> show popup error message
             messagebox.showerror("Error",
                                  "Please make sure you enter a valid user ID, from 1 to " + id_list[-1] + ".")
         else:
-            # valid id --> move to task choosing page
+            # valid id --> create saved tasks directory for specific user, then move to task choosing page
+            if not os.path.exists("saved-tasks/" + str(user_id)):
+                os.mkdir("saved-tasks/" + str(user_id))
+            with open('saved-tasks/user.txt', 'w') as f:
+                f.truncate(0)
+                f.write(str(user_id))
+            f.close()
             choose_task = ChooseTaskPage(root)
             choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-            choose_task.show(root, container, uid, status,
+            choose_task.show(root, container, user_id, status, None,
                              user_num, choose_task, choose_action, do_action,
                              do_input, review, stage_queue, scene_queue, demo_queue, frame_queue,
                              object_queue, input_queue)
@@ -101,7 +107,7 @@ class ChooseTaskPage(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
 
-    def show(self, root, container, user_id, status, user_num, choose_task, demo, do_action, do_input, review,
+    def show(self, root, container, user_id, status, task, user_num, choose_task, demo, do_action, do_input, review,
              stage_queue, scene_queue,
              demo_queue, frame_queue, object_queue, input_queue):
         # Clear unused pages
@@ -126,17 +132,16 @@ class ChooseTaskPage(tk.Frame):
         self.ai2thor_frame.pack(side="top")
 
         # Select tasks for specific users --> using 'user_id'
-
         self.SCENES = []
         self.TASKS = []
-        if os.path.exists('saved-tasks/' + str(self.user_id)):
-            completed_tasks = os.listdir('saved-tasks/' + str(self.user_id))
-            completed_tasks = [x.split('_')[0] for x in completed_tasks]
-        else:
-            completed_tasks = []
+
+        completed_tasks = os.listdir('saved-tasks/' + str(self.user_id))
+        completed_tasks = [x.split('_')[0] for x in completed_tasks]
+        if task is not None:
+            completed_tasks.append(task)
+
         with open('resources/tasks/' + str(self.user_id)+'.csv', newline='') as csvfile:
             csv_data = csv.reader(csvfile)
-            next(csv_data)
             for row in csv_data:
                 task_data = ''.join(row)
                 task_data = task_data.split("_")[0]
@@ -146,10 +151,6 @@ class ChooseTaskPage(tk.Frame):
                     scene = ''.join(row)
                     scene = scene.split('_')[-2]
                     self.SCENES.append(scene)
-        with open('saved-tasks/user.txt', 'w') as f:
-            f.truncate(0)
-            f.write(str(self.user_id))
-        f.close()
 
         task_frame = tk.Frame(self)
         task_frame.pack(side="top")
@@ -629,25 +630,26 @@ class ReviewPage(tk.Frame):
         choose_task = ChooseTaskPage(root)
         choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
         save_button = tk.Button(self, text="SAVE TASK",
-                                command=lambda: self.save_list(root, container, user_id, status, choose_task, None,
+                                command=lambda: self.save_list(root, container, user_id, status, task, choose_task, None,
                                                                None, None, review, stage_queue, scene_queue, demo_queue,
                                                                frame_queue, object_queue, input_queue))
         save_button.pack(side="bottom", fill="x", expand=False)
-        finish_task_button = tk.Button(self, text="REDO TASK",
-                                       command=lambda: choose_task.show(root, container, user_id, status, None,
+        redo_task_button = tk.Button(self, text="REDO TASK",
+                                       command=lambda: choose_task.show(root, container, user_id, status, None, None,
                                                                         choose_task, None, None,
                                                                         None, review, stage_queue, scene_queue,
                                                                         demo_queue,
                                                                         frame_queue, object_queue, input_queue))
-        finish_task_button.pack(side="bottom", fill="x", expand=False)
+        redo_task_button.pack(side="bottom", fill="x", expand=False)
 
         self.lift()
 
-    def save_list(self, root, container, user_id, status, choose_task, demo,
+    def save_list(self, root, container, user_id, status, task, choose_task, demo,
                   do_action, do_input, review, stage_queue, scene_queue, demo_queue,
                   frame_queue, object_queue, input_queue):
         stage_queue.put("save")
-        choose_task.show(root, container, user_id, status, None, choose_task, demo,
+
+        choose_task.show(root, container, user_id, status, task, None, choose_task, demo,
                          do_action, do_input, review, stage_queue, scene_queue, demo_queue,
                          frame_queue, object_queue, input_queue)
 
@@ -1249,13 +1251,11 @@ class AI2THOR():
                                 settings_list = [x.replace('\n', '') for x in settings]
                             with open('saved-tasks/user.txt', 'r') as f:
                                 user_id = f.readline()
-                                if not os.path.exists("saved-tasks/" + str(user_id)):
-                                    os.mkdir("saved-tasks/" + str(user_id))
                             with open("saved-tasks/" + str(user_id) + '/' + settings_list[0] + "_" + settings_list[1], 'w') as f:
                                 f.write(str(settings_list))
                                 f.write(str(self.action_list))
                             f.close()
-                        break
+                            break
                     except queue.Empty:
                         # check and do action
                         if action == 'PickupObject' or action == 'UseUpObject' or action == 'EmptyLiquidFromObject' or action == 'ToggleObjectOn' or action == 'ToggleObjectOff' or action == 'OpenObject' or action == 'CloseObject' or action == 'SliceObject' or action == 'BreakObject' or action == 'DirtyObject' or action == 'CleanObject':
@@ -1285,6 +1285,7 @@ class AI2THOR():
 
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                         self.send_frame(ai2thor_frame)
+
 
     def send_frame(self, frame):
         """Send frame to the frame_queue."""
