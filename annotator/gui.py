@@ -628,6 +628,11 @@ class ReviewPage(tk.Frame):
 
         choose_task = ChooseTaskPage(root)
         choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+        save_button = tk.Button(self, text="SAVE TASK",
+                                command=lambda: self.save_list(root, container, user_id, status, choose_task, None,
+                                                               None, None, review, stage_queue, scene_queue, demo_queue,
+                                                               frame_queue, object_queue, input_queue))
+        save_button.pack(side="bottom", fill="x", expand=False)
         finish_task_button = tk.Button(self, text="REDO TASK",
                                        command=lambda: choose_task.show(root, container, user_id, status, None,
                                                                         choose_task, None, None,
@@ -635,12 +640,6 @@ class ReviewPage(tk.Frame):
                                                                         demo_queue,
                                                                         frame_queue, object_queue, input_queue))
         finish_task_button.pack(side="bottom", fill="x", expand=False)
-
-        save_button = tk.Button(self, text="SAVE TASK",
-                                command=lambda: self.save_list(root, container, user_id, status, choose_task, None,
-                                                               None, None, review, stage_queue, scene_queue, demo_queue,
-                                                               frame_queue, object_queue, input_queue))
-        save_button.pack(side="bottom", fill="x", expand=False)
 
         self.lift()
 
