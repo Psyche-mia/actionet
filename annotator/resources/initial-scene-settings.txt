@@ -12,6 +12,9 @@
 ['12','Put off a candle','candle','toggleon']
 ['13','Throw away used toilet roll and soap bottle','toilet_paper','soap_bottle','usedup']
 ['14','Water the houseplant','water','Watering_Can','filled']
+['15','Clean Mirror','Mirror','Dirty']
+['16','Turn on all the floor lamp','lamp','ToggleOn']
+['17','Wash dirty cloths','cloths','dirty']
 
 
 
