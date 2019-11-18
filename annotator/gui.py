@@ -76,24 +76,18 @@ class UserIDPage(tk.Frame):
         check_id_validity_button.pack(side="top")
         self.lift()
 
-    def check_id_validity(self, user_id, id_list, root, container, status, user_num, choose_task, choose_action, do_action,
+    def check_id_validity(self, uid, id_list, root, container, status, user_num, choose_task, choose_action, do_action,
                           do_input, review, stage_queue, scene_queue, demo_queue,
                           frame_queue, object_queue, input_queue):
-        if str(user_id) not in id_list:
+        if str(uid) not in id_list:
             # id not in list --> show popup error message
             messagebox.showerror("Error",
                                  "Please make sure you enter a valid user ID, from 1 to " + id_list[-1] + ".")
         else:
-            # valid id --> create saved tasks directory for specific user, then move to task choosing page
-            if not os.path.exists("saved-tasks/" + str(user_id)):
-                os.mkdir("saved-tasks/" + str(user_id))
-            with open('saved-tasks/user.txt', 'w') as f:
-                f.truncate(0)
-                f.write(str(user_id))
-            f.close()
+            # valid id --> move to task choosing page
             choose_task = ChooseTaskPage(root)
             choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-            choose_task.show(root, container, user_id, status, None,
+            choose_task.show(root, container, uid, status,
                              user_num, choose_task, choose_action, do_action,
                              do_input, review, stage_queue, scene_queue, demo_queue, frame_queue,
                              object_queue, input_queue)
@@ -107,7 +101,7 @@ class ChooseTaskPage(tk.Frame):
     def __init__(self, *args, **kwargs):
         tk.Frame.__init__(self, *args, **kwargs)
 
-    def show(self, root, container, user_id, status, task, user_num, choose_task, demo, do_action, do_input, review,
+    def show(self, root, container, user_id, status, user_num, choose_task, demo, do_action, do_input, review,
              stage_queue, scene_queue,
              demo_queue, frame_queue, object_queue, input_queue):
         # Clear unused pages
@@ -125,32 +119,27 @@ class ChooseTaskPage(tk.Frame):
         self.scene_queue = scene_queue
         self.frame_queue = frame_queue
         self.user_id=user_id
-        status['text'] = "STATUS: Choosing task...\n"
+        status['text'] = "STATUS: Choosing scene and task...\n"
         # Show initial frame
         self.ai2thor_frame = tk.Label(self)
         self.get_and_set_frame()
         self.ai2thor_frame.pack(side="top")
 
         # Select tasks for specific users --> using 'user_id'
+
         self.SCENES = []
         self.TASKS = []
-
-        completed_tasks = os.listdir('saved-tasks/' + str(self.user_id))
-        completed_tasks = [x.split('_')[0] for x in completed_tasks]
-        if task is not None:
-            completed_tasks.append(task)
-
         with open('resources/tasks/' + str(self.user_id)+'.csv', newline='') as csvfile:
             csv_data = csv.reader(csvfile)
+            next(csv_data)
             for row in csv_data:
                 task_data = ''.join(row)
                 task_data = task_data.split("_")[0]
-                if task_data not in completed_tasks:
-                    self.TASKS.append(task_data)
+                self.TASKS.append(task_data)
 
-                    scene = ''.join(row)
-                    scene = scene.split('_')[-2]
-                    self.SCENES.append(scene)
+                scene = ''.join(row)
+                scene = scene.split('_')[-2]
+                self.SCENES.append(scene)
 
         task_frame = tk.Frame(self)
         task_frame.pack(side="top")
@@ -221,7 +210,7 @@ class DemoPage(tk.Frame):
         self.demo_queue = demo_queue
 
         # write task and scene settings to draw it later
-        with open('saved-tasks/settings.txt', 'w') as f:
+        with open('settings.txt', 'w') as f:
             f.truncate(0)
             f.write(task + "\n")
             f.write("FloorPlan" + scene)
@@ -317,7 +306,7 @@ class DoActionPage(tk.Frame):
         stage_queue.put('do_action')
         # Show status
         status[
-            'text'] = "STATUS: Doing '" + task + "' task in FloorPlan" + scene + "...\n"
+            'text'] = "STATUS: Doing '" + task + "' task in Scene " + scene + "...\n"
 
         # Show frame(s)
         self.ai2thor_frame = tk.Label(self)
@@ -424,7 +413,7 @@ class DoInputPage(tk.Frame):
         self.input_queue = input_queue
         # Change status
         status[
-            'text'] = "STATUS: Interacting with object for '" + task + "' task in FloorPlan" + scene + "...\n"
+            'text'] = "STATUS: Interacting with object for '" + task + "' task in Scene " + scene + "...\n"
         # Show initial frame
         self.ai2thor_frame = tk.Label(self)
         self.ai2thor_frame.configure(image=initial_frame)
@@ -618,7 +607,7 @@ class ReviewPage(tk.Frame):
             do_input.destroy()
 
         stage_queue.put('review')
-        status['text'] = "STATUS: Reviewing actions for '" + task + "' task for FloorPlan" + scene + "...\n"
+        status['text'] = "STATUS: Reviewing actions for '" + task + "' task for Scene " + scene + "...\n"
 
         self.frame_queue = frame_queue
 
@@ -629,27 +618,27 @@ class ReviewPage(tk.Frame):
 
         choose_task = ChooseTaskPage(root)
         choose_task.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
-        save_button = tk.Button(self, text="SAVE TASK",
-                                command=lambda: self.save_list(root, container, user_id, status, task, choose_task, None,
-                                                               None, None, review, stage_queue, scene_queue, demo_queue,
-                                                               frame_queue, object_queue, input_queue))
-        save_button.pack(side="bottom", fill="x", expand=False)
-        redo_task_button = tk.Button(self, text="REDO TASK",
-                                       command=lambda: choose_task.show(root, container, user_id, status, None, None,
+        finish_task_button = tk.Button(self, text="REDO TASK",
+                                       command=lambda: choose_task.show(root, container, user_id, status, None,
                                                                         choose_task, None, None,
                                                                         None, review, stage_queue, scene_queue,
                                                                         demo_queue,
                                                                         frame_queue, object_queue, input_queue))
-        redo_task_button.pack(side="bottom", fill="x", expand=False)
+        finish_task_button.pack(side="bottom", fill="x", expand=False)
+
+        save_button = tk.Button(self, text="SAVE TASK",
+                                command=lambda: self.save_list(root, container, user_id, status, choose_task, None,
+                                                               None, None, review, stage_queue, scene_queue, demo_queue,
+                                                               frame_queue, object_queue, input_queue))
+        save_button.pack(side="bottom", fill="x", expand=False)
 
         self.lift()
 
-    def save_list(self, root, container, user_id, status, task, choose_task, demo,
+    def save_list(self, root, container, user_id, status, choose_task, demo,
                   do_action, do_input, review, stage_queue, scene_queue, demo_queue,
                   frame_queue, object_queue, input_queue):
         stage_queue.put("save")
-
-        choose_task.show(root, container, user_id, status, task, None, choose_task, demo,
+        choose_task.show(root, container, user_id, status, None, choose_task, demo,
                          do_action, do_input, review, stage_queue, scene_queue, demo_queue,
                          frame_queue, object_queue, input_queue)
 
@@ -676,7 +665,7 @@ class AI2THOR():
     def run(self):
         """Run AI2-THOR."""
         controller = ai2thor.controller.Controller()
-        controller.local_executable_path = "/home/samson/Documents/github/allenai/ai2thor/unity/Builds/linux.x86_64"
+        controller.local_executable_path = "/home/user/ai2thor/unity/Builds/linux.x86_64"
         controller.start(player_screen_width=1000,
                          player_screen_height=500)
         anglehandx = 0.0
@@ -932,45 +921,45 @@ class AI2THOR():
                     objects.append(lowest)
                     lowest_dict.clear()
 
-                # for i, v in obj_distance.items():
-                #     if 'BreadSliced' in i:
-                #         lowest_dict[i] = v
-                # if not len(lowest_dict) == 0:
-                #     lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
-                #     objects.append(lowest)
-                #     lowest_dict.clear()
+                for i, v in obj_distance.items():
+                    if 'BreadSliced' in i:
+                        lowest_dict[i] = v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                # for i, v in obj_distance.items():
-                #     if 'TomatoSliced' in i:
-                #         lowest_dict[i] = v
-                # if not len(lowest_dict) == 0:
-                #     lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
-                #     objects.append(lowest)
-                #     lowest_dict.clear()
+                for i, v in obj_distance.items():
+                    if 'TomatoSliced' in i:
+                        lowest_dict[i] = v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                # for i, v in obj_distance.items():
-                #     if 'AppleSliced' in i:
-                #         lowest_dict[i] = v
-                # if not len(lowest_dict) == 0:
-                #     lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
-                #     objects.append(lowest)
-                #     lowest_dict.clear()
+                for i, v in obj_distance.items():
+                    if 'AppleSliced' in i:
+                        lowest_dict[i] = v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                # for i, v in obj_distance.items():
-                #     if 'LettuceSliced' in i:
-                #         lowest_dict[i] = v
-                # if not len(lowest_dict) == 0:
-                #     lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
-                #     objects.append(lowest)
-                #     lowest_dict.clear()
+                for i, v in obj_distance.items():
+                    if 'LettuceSliced' in i:
+                        lowest_dict[i] = v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
-                # for i, v in obj_distance.items():
-                #     if 'PotatoSliced' in i:
-                #         lowest_dict[i] = v
-                # if not len(lowest_dict) == 0:
-                #     lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
-                #     objects.append(lowest)
-                #     lowest_dict.clear()
+                for i, v in obj_distance.items():
+                    if 'PotatoSliced' in i:
+                        lowest_dict[i] = v
+                if not len(lowest_dict) == 0:
+                    lowest = min(lowest_dict.items(), key=operator.itemgetter(1))[0]
+                    objects.append(lowest)
+                    lowest_dict.clear()
 
                 for i, v in obj_distance.items():
                     if 'Shelf' in i:
@@ -1120,7 +1109,7 @@ class AI2THOR():
                     'Water the houseplant'
                 ]
 
-                with open('saved-tasks/settings.txt', 'r') as f:
+                with open('settings.txt', 'r') as f:
                     settings = f.readlines()
                     settings_list = [x.replace('\n', '') for x in settings]
                 if settings_list[0] in config_task_list:
@@ -1246,16 +1235,14 @@ class AI2THOR():
                     try:
                         stage = self.stage_queue.get(0)
                         if stage == 'save':
-                            with open('saved-tasks/settings.txt', 'r') as f:
+                            with open('settings.txt', 'r') as f:
                                 settings = f.readlines()
                                 settings_list = [x.replace('\n', '') for x in settings]
-                            with open('saved-tasks/user.txt', 'r') as f:
-                                user_id = f.readline()
-                            with open("saved-tasks/" + str(user_id) + '/' + settings_list[0] + "_" + settings_list[1], 'w') as f:
+                            with open("saved-tasks/" + settings_list[0] + "_" + settings_list[1], 'w') as f:
                                 f.write(str(settings_list))
                                 f.write(str(self.action_list))
                             f.close()
-                            break
+                        break
                     except queue.Empty:
                         # check and do action
                         if action == 'PickupObject' or action == 'UseUpObject' or action == 'EmptyLiquidFromObject' or action == 'ToggleObjectOn' or action == 'ToggleObjectOff' or action == 'OpenObject' or action == 'CloseObject' or action == 'SliceObject' or action == 'BreakObject' or action == 'DirtyObject' or action == 'CleanObject':
@@ -1269,23 +1256,22 @@ class AI2THOR():
                             event = controller.step(
                                 dict(action=action, objectId=new_action_list[a + 1], fillLiquid=new_action_list[a + 2]))
                         elif action == 'RotateHandX':
-                            anglehandX = anglehandX + 30.0
-                            event = controller.step(dict(action='RotateHand', x=anglehandX))
+                            anglehandx = anglehandx + 30.0
+                            event = controller.step(dict(action='RotateHand', x=anglehandx))
                         elif action == 'RotateHandY':
-                            anglehandY = anglehandY + 30.0
-                            event = controller.step(dict(action='RotateHand', y=anglehandY))
+                            anglehandy = anglehandy + 30.0
+                            event = controller.step(dict(action='RotateHand', y=anglehandy))
                         elif action == 'RotateHandZ':
-                            anglehandZ = anglehandZ + 30.0
-                            event = controller.step(dict(action='RotateHand', z=anglehandZ))
+                            anglehandz = anglehandz + 30.0
+                            event = controller.step(dict(action='RotateHand', z=anglehandz))
                         elif action == 'MoveHandAhead' or action == 'MoveHandBack' or action == 'MoveHandLeft' or action == 'MoveHandRight' or action == 'MoveHandUp' or action == 'MoveHandDown':
-                            event = controller.step(dict(action=action, moveMagnitude=0.01))
+                            event = controller.step(dict(action=action, moveMagnitude=0.1))
                         elif action == 'MoveRight' or action == 'MoveAhead' or action == 'MoveLeft' or action == 'MoveBack' or action == 'RotateLeft' or action == 'RotateRight' or action == 'LookUp' or action == 'LookDown':
                             event = controller.step(dict(action=action))
                         a += 1
 
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                         self.send_frame(ai2thor_frame)
-
 
     def send_frame(self, frame):
         """Send frame to the frame_queue."""
