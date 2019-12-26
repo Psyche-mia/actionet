@@ -12,6 +12,7 @@ import operator
 from tkinter.ttk import *
 from tkinter import messagebox
 import csv
+import cv2
 
 class Gui():
     """
@@ -54,7 +55,7 @@ class UserIDPage(tk.Frame):
              frame_queue, object_queue, input_queue):
         # do not have to clear unused pages, since we only use this page once
         id_list = []
-        no_of_people = 100
+        no_of_people = 200
         for i in range(no_of_people):
             id_list.append(str(i + 1))
 
@@ -266,9 +267,9 @@ class DemoPage(tk.Frame):
         instruction_label.config(font=("Courier Bold", 14))
 
         # show demo video
-        # self.demo_frame = tk.Label(self)
-        # self.get_and_set_demo_video()
-        # self.demo_frame.pack(side="top")
+        self.demo_frame = tk.Label(self)
+        self.get_and_set_demo_video()
+        self.demo_frame.pack(side="top")
 
         do_action = DoActionPage(root)
         do_action.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
@@ -460,6 +461,8 @@ class DoInputPage(tk.Frame):
             "Push",
             "Put down",
             "Slice",
+            "Stand",
+            "Crouch",
             "Throw",
             "Toggle off",
             "Toggle on",
@@ -597,7 +600,7 @@ class DoInputPage(tk.Frame):
         Hide or show buttons depending on needs.
         """
         interaction = self.input_actions.get()
-        if interaction == 'Drop' or interaction == 'Throw':
+        if interaction == 'Drop' or interaction == 'Throw' or interaction== 'Stand' or interaction=='Crouch':
             self.target_object_frame.pack_forget()
             self.put_down_target_object_frame.pack_forget()
             self.fill_target_object_frame.pack_forget()
@@ -691,7 +694,7 @@ class AI2THOR():
     def run(self):
         """Run AI2-THOR."""
         controller = ai2thor.controller.Controller()
-        controller.local_executable_path = "/home/samson/Documents/github/allenai/ai2thor/unity/Builds/linux.x86_64"
+        controller.local_executable_path = "/home/user/ai2thor/unity/unity/Builds/linux.x86_64"
         controller.start(player_screen_width=1000,
                          player_screen_height=500)
         anglehandx = 0.0
@@ -1055,6 +1058,14 @@ class AI2THOR():
                             event = controller.step(dict(action='DropHandObject'))
                             if event.metadata['lastActionSuccess']:
                                 self.action_list.append("DropHandObject")
+                        elif interaction[1] == 'Stand':
+                            event = controller.step(dict(action='Stand'))
+                            if event.metadata['lastActionSuccess']:
+                                self.action_list.append("Stand")
+                        elif interaction[1] == 'Crouch':
+                            event = controller.step(dict(action='Crouch'))
+                            if event.metadata['lastActionSuccess']:
+                                self.action_list.append("Crouch")
                         elif interaction[1] == 'Empty':
                             event = controller.step(dict(action='EmptyLiquidFromObject', objectId=interaction[2]))
                             if event.metadata['lastActionSuccess']:
@@ -1296,6 +1307,19 @@ class AI2THOR():
                 anglehandz = 0.0
 
                 # Send replay action frames to GUI
+                with open('saved-tasks/settings.txt', 'r') as f:
+                    settings = f.readlines()
+
+                    settings_list = [x.replace('\n', '') for x in settings]
+                with open('saved-tasks/user.txt', 'r') as f:
+                    user_id = f.readline()
+                replaycount=0
+                finish=0
+                newpath = '/home/user/Desktop/actionet/annotator/recorded_video/' + str(user_id) + '_' + settings_list[
+                    0] + '_' + settings_list[1]
+                if not os.path.exists(newpath):
+                    # os.remove()
+                    os.makedirs(newpath)
                 for action in new_action_list:
                     # to check for user skipping replay video
                     try:
@@ -1303,9 +1327,15 @@ class AI2THOR():
                         if stage == 'save':
                             with open('saved-tasks/settings.txt', 'r') as f:
                                 settings = f.readlines()
+
                                 settings_list = [x.replace('\n', '') for x in settings]
                             with open('saved-tasks/user.txt', 'r') as f:
                                 user_id = f.readline()
+                                # print(user_id)
+                                # print(settings_list[0])
+                                # print(settings_list[1])
+
+
                             with open("saved-tasks/" + str(user_id) + '/' + settings_list[0] + "_" + settings_list[1], 'w') as f:
                                 f.write(str(settings_list))
                                 f.write(str(self.action_list))
@@ -1313,33 +1343,56 @@ class AI2THOR():
                         break
                     except queue.Empty:
                         # check and do action
+
                         if action == 'PickupObject' or action == 'UseUpObject' or action == 'EmptyLiquidFromObject' or action == 'ToggleObjectOn' or action == 'ToggleObjectOff' or action == 'OpenObject' or action == 'CloseObject' or action == 'SliceObject' or action == 'BreakObject' or action == 'DirtyObject' or action == 'CleanObject':
                             event = controller.step(dict(action=action, objectId=new_action_list[a + 1]))
+
                         elif action == 'PutObject':
                             event = controller.step(dict(action=action, objectId=new_action_list[a + 1],
-                                                         receptacleObjectId=new_action_list[a + 2]))
+                                                         receptacleObjectId=new_action_list[a + 2],forceAction=True))
+
                         elif action == 'ThrowObject' or action == 'PushObject' or action == 'PullObject':
-                            event = controller.step(dict(action=action, moveMagnitude=100.0))
+                            event = controller.step(dict(action=action, moveMagnitude=150.0))
+
                         elif action == 'FillObjectWithLiquid':
                             event = controller.step(
                                 dict(action=action, objectId=new_action_list[a + 1], fillLiquid=new_action_list[a + 2]))
+
+                        elif action=='Stand':
+                            event = controller.step(dict(action='Stand'))
+
+                        elif action=='Crouch':
+                            event = controller.step(dict(action='Crouch'))
+
+                        elif action=='DropHandObject':
+                            event = controller.step(dict(action='DropHandObject'))
+
                         elif action == 'RotateHandX':
                             anglehandx = anglehandx + 30.0
                             event = controller.step(dict(action='RotateHand', x=anglehandx))
+
                         elif action == 'RotateHandY':
                             anglehandy = anglehandy + 30.0
                             event = controller.step(dict(action='RotateHand', y=anglehandy))
+
                         elif action == 'RotateHandZ':
                             anglehandz = anglehandz + 30.0
                             event = controller.step(dict(action='RotateHand', z=anglehandz))
+
                         elif action == 'MoveHandAhead' or action == 'MoveHandBack' or action == 'MoveHandLeft' or action == 'MoveHandRight' or action == 'MoveHandUp' or action == 'MoveHandDown':
                             event = controller.step(dict(action=action, moveMagnitude=0.1))
+
                         elif action == 'MoveRight' or action == 'MoveAhead' or action == 'MoveLeft' or action == 'MoveBack' or action == 'RotateLeft' or action == 'RotateRight' or action == 'LookUp' or action == 'LookDown':
                             event = controller.step(dict(action=action))
+
+                        cv2.imwrite('/home/user/Desktop/actionet/annotator/recorded_video/' + str(user_id) + '_' + settings_list[0] + '_' + settings_list[1]+'/'+ str(replaycount) + '.jpg',event.cv2img)
+                        replaycount +=1
                         a += 1
 
                         ai2thor_frame = ImageTk.PhotoImage(Image.fromarray(event.frame))
                         self.send_frame(ai2thor_frame)
+
+
 
     def send_frame(self, frame):
         """Send frame to the frame_queue."""
