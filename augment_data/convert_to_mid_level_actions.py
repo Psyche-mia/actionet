@@ -226,6 +226,7 @@ for user_path in user_paths:
                     # Get closest object (using y coordinate) that is below hand (using x and z coordinates)
                     possible_objects = {}
                     # TODO: Get x and z coordinate bounds for suggested object and check if hand's x and z coordinates are within bounds
+                    # Using 'isPickedUp'
                     distance = 0
                     possible_objects[obj] = distance
                     sorted_possible_objects = [k for k, v in sorted(possible_objects.items(), key=lambda item: item[1])]
