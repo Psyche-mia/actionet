@@ -3,6 +3,7 @@ import os
 from collections import defaultdict
 import re
 import statistics
+import numpy as np
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--task_path")
@@ -133,7 +134,47 @@ print("Number of tasks by category (instances): " + str(task_instances_by_catego
 print("\n")
 
 
-# 3. Find max n min for each category and its median
+# 3. Find max, min, median and SD for total
+task_steps = []
+
+for user_dir in task_dir:
+    user_batches = [os.path.join(user_dir, d) for d in os.listdir(user_dir) 
+                    if os.path.isdir(os.path.join(user_dir, d))]
+
+    for user_batch in user_batches:
+        user_tasks = [os.path.join(user_batch, d) for d in os.listdir(user_batch) 
+                    if os.path.isfile(os.path.join(user_batch, d))]
+                    
+        for task in user_tasks:
+            with open(task) as f:
+                data = f.read()
+
+            data = data.replace('][', ',')
+            data = data.replace('[','')
+            data = data.replace(']','')
+            data = data.replace("'", '')
+            task_list =  data.split(",")
+
+            task_name = task_list[0]
+            floor_plan = task_list[1]
+            floor_plan = int(re.findall('\d+', floor_plan)[0])
+
+            task_steps.append(len(task_list) - 2)
+
+max_step = max(task_steps)
+min_step = min(task_steps)
+median_step = statistics.median(task_steps)
+sd = np.std(task_steps)
+
+print("\n")
+print("Max step for total: " + str(max_step))
+print("Min step for total: " + str(min_step))
+print("Median step for total: " + str(median_step))
+print("SD for total: " + str(sd))
+print("\n")
+
+
+# 4. Find max, min, median and SD for each category
 task_steps_by_category = defaultdict(lambda: [])
 
 for user_dir in task_dir:
@@ -172,20 +213,23 @@ for user_dir in task_dir:
 max_dict = defaultdict(lambda: 0)
 min_dict = defaultdict(lambda: 0)
 median_dict = defaultdict(lambda: 0)
+sd_dict = defaultdict(lambda: 0)
 
 for s in task_steps_by_category.keys():
     max_dict[s] = max(task_steps_by_category[s])
     min_dict[s] = min(task_steps_by_category[s])
     median_dict[s] = statistics.median(task_steps_by_category[s])
+    sd_dict[s] = np.std(task_steps_by_category[s])
 
 print("\n")
 print("Max step by category: " + str(max_dict))
 print("Min step by category: " + str(min_dict))
 print("Median step by category: " + str(median_dict))
+print("SD by category: " + str(sd_dict))
 print("\n")
 
 
-# 4. Classify each task by complex/moderate/easy this can be determine using the SD of the disturbation
+# 5. Classify each task by complex/moderate/easy
 task_count = defaultdict(lambda: 0)
 step_count = defaultdict(lambda: 0)
 avg_step = defaultdict(lambda: 0)
