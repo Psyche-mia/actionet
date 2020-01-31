@@ -694,7 +694,7 @@ class AI2THOR():
     def run(self):
         """Run AI2-THOR."""
         controller = ai2thor.controller.Controller()
-        controller.local_executable_path = "/home/user/ai2thor/unity/unity/Builds/linux.x86_64"
+        controller.local_executable_path = "/home/samson/Documents/github/allenai/ai2thor/unity/Builds/linux.x86_64"
         controller.start(player_screen_width=1000,
                          player_screen_height=500)
         anglehandx = 0.0
