@@ -24,15 +24,12 @@ desc_dir = [os.path.join(desc_path, d) for d in os.listdir(desc_path)
 # 1. Total number of tasks
 tasks = []
 task_instances = 0
-error = 0
 
 for num_dir in task_dir:
     user_tasks = [os.path.join(num_dir, d) for d in os.listdir(num_dir) 
                 if os.path.isfile(os.path.join(num_dir, d))]
                 
     for task in user_tasks:
-        task_instances += 1
-
         with open(task) as f:
             data = f.read()
 
@@ -44,31 +41,32 @@ for num_dir in task_dir:
 
         task_name = task_list[0]
 
-        # Check if there are repeated tasks
-        done = False
-        for t in tasks:
-            # If task value in dictionaries is already the shortest and is repeated
-            if len(t) <= len(task_name):
-                length = len(t)
-                if task_name[:length] == t:
-                    done = True
-                    break
-            # If task value in dictionaries is not the shortest and is repeated
-            else:
-                length = len(task_name)
-                if t[:length] == task_name:
-                    tasks.append(task_name)
-                    tasks.remove(t)
-                    done = True
-                    break
-        if not done:
-            tasks.append(task_name)
-        if '+' not in ' '.join(task_list):
-            error += 1
+        if '+' in ' '.join(task_list):
+            task_instances += 1
+
+            # Check if there are repeated tasks
+            done = False
+            for t in tasks:
+                # If task value in dictionaries is already the shortest and is repeated
+                if len(t) <= len(task_name):
+                    length = len(t)
+                    if task_name[:length] == t:
+                        done = True
+                        break
+                # If task value in dictionaries is not the shortest and is repeated
+                else:
+                    length = len(task_name)
+                    if t[:length] == task_name:
+                        tasks.append(task_name)
+                        tasks.remove(t)
+                        done = True
+                        break
+            if not done:
+                tasks.append(task_name)
 
 print("\n")
 print("Total number of tasks: " + str(len(tasks)))
-print("Total number of tasks (instances): " + str(task_instances - error))
+print("Total number of tasks (instances): " + str(task_instances))
 print("\n")
 
 
@@ -106,29 +104,38 @@ for num_dir in task_dir:
         if '+' in ' '.join(task_list):
             task_instances_by_category[scene] += 1
 
-        # Check if there are repeated tasks
-        done = False
-        for t in tasks_by_category[scene]:
-            # If task value in dictionaries is already the shortest and is repeated
-            if len(t) <= len(task_name):
-                length = len(t)
-                if task_name[:length] == t:
-                    done = True
-                    break
-            # If task value in dictionaries is not the shortest and is repeated
-            else:
-                length = len(task_name)
-                if t[:length] == task_name:
-                    tasks_by_category[scene].append(task_name)
-                    tasks_by_category[scene].remove(t)
-                    done = True
-                    break
-        if not done:
-            tasks_by_category[scene].append(task_name)
+            # Check if there are repeated tasks
+            done = False
+            for t in tasks_by_category[scene]:
+                # If task value in dictionaries is already the shortest and is repeated
+                if len(t) <= len(task_name):
+                    length = len(t)
+                    if task_name[:length] == t:
+                        done = True
+                        break
+                # If task value in dictionaries is not the shortest and is repeated
+                else:
+                    length = len(task_name)
+                    if t[:length] == task_name:
+                        tasks_by_category[scene].append(task_name)
+                        tasks_by_category[scene].remove(t)
+                        done = True
+                        break
+            if not done:
+                tasks_by_category[scene].append(task_name)
 
 tasks_by_category_count = defaultdict(lambda: 0)
 for s in tasks_by_category.keys():
     tasks_by_category_count[s] = len(tasks_by_category[s])
+test = []
+for s in tasks_by_category.keys():
+    test.extend(tasks_by_category[s])
+
+
+if len(test) == len(set(test)):
+    print("GGGG")
+else:
+    print(set([x for x in test if test.count(x) > 1]))
 
 print("\n")
 print("Number of tasks by category: " + str(tasks_by_category_count))
@@ -457,7 +464,7 @@ for num_dir in task_dir:
                     length = len(task_name)
                     if t[:length] == task_name:
                         done = True
-                        instances_by_category_and_task[scene][task_name] = instances_by_category_and_task[scene][t] + 1
+                        instances_by_category_and_task[scene][task_name] += instances_by_category_and_task[scene][t] + 1
                         del instances_by_category_and_task[scene][t]
                         break
             if not done:
@@ -466,3 +473,11 @@ for num_dir in task_dir:
 print("\n")
 print("Number of instances by category and by task: " + str(instances_by_category_and_task))
 print("\n")
+
+total_num = 0
+# total = defaultdict(lambda: 0)
+for k,v in instances_by_category_and_task.items():
+    for i in v.keys():
+        total_num += v[i]
+        # total[k] += v[i]
+print("TOTAL: " + str(total_num))
