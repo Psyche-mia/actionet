@@ -1,17 +1,17 @@
 # ActioNet: An Interactive End-to-End Platform for Task-Based Data Collection and Augmentation in 3D Environments
 ## Task-Based Dataset
-Our dataset can be found in the '_./dataset/{collection_instance}_' folders.
+Our dataset can be found in the '**./dataset/{collection_instance}**' folders.
 
-Each **data file** has the naming convention of '_./dataset/{collection_instance}/{task}\_{floor_plan}_'. In each file, there are **two lists**:
+Each **data file** has the naming convention of '**./dataset/{collection_instance}/{task}\_{floor_plan}**'. In each file, there are **two lists**:
 - The **first list** shows the **task** and the **floor plan**
 - The **second list** shows the **actions taken to complete the task**
 
-The '_./dataset/resources/task_descriptions_' folder contains the **descriptions of the tasks for each collection instance**.
+The '**./dataset/resources/task_descriptions**' folder contains the **descriptions of the tasks for each collection instance**.
 
-The '_./dataset/resources/user_tasks_' folder contains the **collection instances and tasks that each user is in charge of**.
+The '**./dataset/resources/user_tasks**' folder contains the **collection instances and tasks that each user is in charge of**.
 
 ## Dataset Statistics
-The statistics below are obtained from running the '_./get_stats.py_' file.
+The statistics below are obtained from running the '**./get_stats.py**' file.
 
 ### Total
 Tasks sorted by complexity (number of steps taken):
@@ -124,22 +124,22 @@ Mean length of mid-level tasks: 2.5
 
 
 ## Annotation Program
-Our **annotation program** can be found in the '_./annotate_' folder.
+Our **annotation program** can be found in the '**./annotate**' folder.
 
-It can be **run** by running the '_./annotate/gui.py_' file.
+It can be **run** by running the '**./annotate/gui.py**' file.
 
-We have **made changes** to the '_allenai/ai2thor/unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs_' file in AI2-THOR to better suit our requirements, and the edited file is '_./annotate/PhysicsRemoteFPSAgentController.cs_'. 
+We have **made changes** to the '**allenai/ai2thor/unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs**' file in AI2-THOR to better suit our requirements, and the edited file is '**./annotate/PhysicsRemoteFPSAgentController.cs**'. 
 
-In the '_./annotate/resources_' folder, we have:
-- '_demo.mp4_': **tutorial video** displayed for users in our annotation program
-- '_initial-scene-settings.txt_': **custom initial scene settings** for some of our tasks, in the '_['index','task','object',...,'actionable_property']_' format
-- '_keyboard-control.png_': **keyboard control guide** displayed for users in our annotation program
-- '_tasks_': folder containing the **tasks for each collection instance**, and is **used by our annotation program** to track progress and display related information during task annotation
+In the '**./annotate/resources**' folder, we have:
+- '**demo.mp4**': **tutorial video** displayed for users in our annotation program
+- '**initial-scene-settings.txt**': **custom initial scene settings** for some of our tasks, in the '**['index','task','object',...,'actionable_property']**' format
+- '**keyboard-control.png**': **keyboard control guide** displayed for users in our annotation program
+- '**tasks**': folder containing the **tasks for each collection instance**, and is **used by our annotation program** to track progress and display related information during task annotation
 
 ## Data Augmentation
 
 
 ## Creating Videos
-The '_./make_videos/replay_and_save_frames.py_' file is used to **replay the actions** in the dataset as a series of frames, and **save the frames**.
+The '**./make_videos/replay_and_save_frames.py**' file is used to **replay the actions** in the dataset as a series of frames, and **save the frames**.
 
-The '_./make_videos/create_video_from_frames.py_' file is used to **create videos from the frames saved**.
+The '**./make_videos/create_video_from_frames.py**' file is used to **create videos from the frames saved**.
