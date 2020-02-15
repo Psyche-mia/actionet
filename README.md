@@ -131,10 +131,10 @@ It can be **run** by running the '**./annotate/gui.py**' file.
 We have **made changes** to the '**allenai/ai2thor/unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs**' file in AI2-THOR to better suit our requirements, and the edited file is '**./annotate/PhysicsRemoteFPSAgentController.cs**'. 
 
 In the '**./annotate/resources**' folder, we have:
-- '**demo.mp4**': **tutorial video** displayed for users in our annotation program
-- '**initial-scene-settings.txt**': **custom initial scene settings** for some of our tasks, in the '**['index','task','object',...,'actionable_property']**' format
-- '**keyboard-control.png**': **keyboard control guide** displayed for users in our annotation program
-- '**tasks**': folder containing the **tasks for each collection instance**, and is **used by our annotation program** to track progress and display related information during task annotation
+- '**./demo.mp4**': **tutorial video** displayed for users in our annotation program
+- '**./initial-scene-settings.txt**': **custom initial scene settings** for some of our tasks, in the '**['index','task','object', ... ,'actionable_property']**' format
+- '**./keyboard-control.png**': **keyboard control guide** displayed for users in our annotation program
+- '**./tasks**': folder containing the **tasks for each collection instance**, and is **used by our annotation program** to track progress and display related information during task annotation
 
 ## Data Augmentation
 
