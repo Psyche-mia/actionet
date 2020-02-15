@@ -1,8 +1,8 @@
 # ActioNet: An Interactive End-to-End Platform for Task-Based Data Collection and Augmentation in 3D Environments
 ## Task-Based Dataset
-Our dataset can be found in the '_./dataset/{collection_id}_' folders.
+Our dataset can be found in the '_./dataset/{collection_instance}_' folders.
 
-Each **data file** has the naming convention of '_./dataset/{collection_id}/{task}\_{floor_plan}_'. In each file, there are **two lists**:
+Each **data file** has the naming convention of '_./dataset/{collection_instance}/{task}\_{floor_plan}_'. In each file, there are **two lists**:
 - The **first list** shows the **task** and the **floor plan**
 - The **second list** shows the **actions taken to complete the task**
 
