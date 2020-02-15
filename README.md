@@ -2,6 +2,8 @@
 ## Task-Based Dataset
 Our dataset can be found in the '**./dataset/{collection_instance}**' folders.
 
+It is created using **AI2-THOR** (https://ai2thor.allenai.org/).
+
 Each **data file** has the naming convention of '**./dataset/{collection_instance}/{task}\_{floor_plan}**'. In each file, there are **two lists**:
 - The **first list** shows the **task** and the **floor plan**
 - The **second list** shows the **actions taken to complete the task**
@@ -128,7 +130,7 @@ Our **annotation program** can be found in the '**./annotate**' folder.
 
 It can be **run** by running the '**./annotate/gui.py**' file.
 
-We have **made changes** to the '**allenai/ai2thor/unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs**' file in AI2-THOR to allow for the **customisation of initial scene settings (eg. object state) for some tasks**, and the edited file is '**./annotate/PhysicsRemoteFPSAgentController.cs**' (https://github.com/allenai/ai2thor).
+We have **made changes** to the '**allenai/ai2thor/unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs**' file in **AI2-THOR** (https://github.com/allenai/ai2thor) to allow for the **customisation of initial scene settings (eg. object state) for some tasks**, and the edited file is '**./annotate/PhysicsRemoteFPSAgentController.cs**'.
 
 In the '**./annotate/resources**' folder, we have:
 - '**./demo.mp4**': **tutorial video** displayed for users in our annotation program
