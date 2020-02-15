@@ -10,6 +10,8 @@ The '_./dataset/resources/task_descriptions_' folder contains the **task descrip
 
 The '_./dataset/resources/user_tasks_' folder contains the **collection instances and tasks that each user is in charge of**.
 
+## Dataset Statistics
+
 ## Annotation Program
 Our **annotation program** can be found in the '_./annotate_' folder.
 
@@ -27,3 +29,6 @@ In the '_./annotate/resources_' folder, we have:
 
 
 ## Creating Videos
+The '_./make_videos/replay_and_save_frames.py_' file is used to **replay the actions** in the dataset as a series of frames, and **save the frames**.
+
+The '_./make_videos/create_video_from_frames.py_' file is used to **create videos from the frames saved**.
