@@ -11,6 +11,8 @@ The '_./dataset/resources/task_descriptions_' folder contains the **task descrip
 The '_./dataset/resources/user_tasks_' folder contains the **collection instances and tasks that each user is in charge of**.
 
 ## Dataset Statistics
+The statistics below are obtained from running the '_./get_stats.py_' file.
+
 ### Total
 Tasks sorted by complexity (number of steps taken):
 - Easy: ['Close the shower curtain', 'Fill up the bathtub with water', 'Fill the sink with water', 'Off kitchen light', 'Open Blinds', 'Use the handphone', 'Close the blinds', 'Turn on shower head', 'Turn off the living room light', 'Find the egg in the room', 'Turn on all the floor lamp', 'Turn off all the bedroom light', 'Break shower glass', 'Hand towel on towelholder', 'Turn off the table lamp or desk lamp', 'Make coffee', 'Break the mirror', 'Use laptop', 'Read a book', 'Put off a candle', 'Crack the handphone screen']
