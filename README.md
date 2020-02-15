@@ -11,6 +11,20 @@ The '_./dataset/resources/task_descriptions_' folder contains the **task descrip
 The '_./dataset/resources/user_tasks_' folder contains the **collection instances and tasks that each user is in charge of**.
 
 ## Dataset Statistics
+### Total
+Number of tasks: 63
+
+Number of task instances: 3038
+
+Max number of actions: 878
+
+Min number of actions: 3
+
+Mean number of actions: 70.5
+
+Standard deviation for actions: 78.3
+
+### By Room Category
 
 ## Annotation Program
 Our **annotation program** can be found in the '_./annotate_' folder.
