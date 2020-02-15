@@ -33,6 +33,11 @@ Mean length of mid-level tasks: 2.22
 
 ### By Room Category
 #### Kitchen
+Tasks sorted by complexity (number of steps taken):
+- Easy: ['Off kitchen light', 'Find the egg in the room', 'Make coffee', 'Throw away cracked egg', 'Fill up cup with water', 'Pour wine into a cup', 'Pour away coffee in a cup', 'Hide the egg']
+- Moderate: ['Toast a bread', 'Prepare sliced apple', 'Clear the fridge', 'Boil water with a kettle', 'Pour away water from pot', 'Boil water with pot', 'Microwave the sliced potato', 'Throw away unused apple slice']
+- Complex: ['Fry an egg', 'Wash Dishes', 'Keep kitchen utensils inside drawer', 'Boil Potato', 'Store food into fridge', 'Make a breakfast', 'Make lettuce soup', 'Wash all the utensils', 'Make tomato soup']
+
 Number of tasks: 26
 
 Number of task instances: 1314
@@ -48,6 +53,11 @@ Standard deviation for actions: 85
 Mean length of mid-level tasks: 6
 
 #### Living Room
+Tasks sorted by complexity (number of steps taken):
+- Easy: ['Use the handphone', 'Turn off the living room light', 'Turn on all the floor lamp', 'Turn off the table lamp or desk lamp', 'Use laptop', 'Read a book']
+- Moderate: ['Crack the handphone screen', 'Check the timing on the watch', 'Clear the sofa', 'Crack the window', 'Watch television', 'Throw away used tissuebox']
+- Complex: ['Water the houseplant', 'Keep the laptop', 'Keep box inside safe', 'Keep valuable items in safe', 'Light up one candle with another', 'Pack things into the box']
+
 Number of tasks: 18
 
 Number of task instances: 794
@@ -63,6 +73,11 @@ Standard deviation for actions: 72.9
 Mean length of mid-level tasks: 4
 
 #### Bedroom
+Tasks sorted by complexity (number of steps taken):
+- Easy: ['Open Blinds', 'Close the blinds', 'Turn off all the bedroom light']
+- Moderate: ['Break the mirror', 'Clean the bed', 'Clear the bed']
+- Complex: ['Keep sporting equipment', 'Collect dirty cloths', 'Keep box inside safe', 'Keep valuable items in safe']
+
 Number of tasks: 10
 
 Number of task instances: 404
@@ -78,6 +93,11 @@ Standard deviation for actions: 83
 Mean length of mid-level tasks: 1.9
 
 #### Bathroom
+Tasks sorted by complexity (number of steps taken):
+- Easy: ['Close the shower curtain', 'Fill up the bathtub with water', 'Fill the sink with water', 'Turn on shower head']
+- Moderate: ['Break shower glass', 'Hand towel on towelholder', 'Put off a candle', 'Clean the mirror']
+- Complex: ['sink towel in water', 'Wash dirty cloths', 'Throw away used toilet roll and soap bottle']
+
 Number of tasks: 11
 
 Number of task instances: 526
