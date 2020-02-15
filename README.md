@@ -132,7 +132,7 @@ We have **made changes** to the '**allenai/ai2thor/unity/Assets/Scripts/PhysicsR
 
 In the '**./annotate/resources**' folder, we have:
 - '**./demo.mp4**': **tutorial video** displayed for users in our annotation program
-- '**./initial-scene-settings.txt**': **custom initial scene settings** for some of our tasks, in the '**['index','task','object', ... ,'actionable_property']**' format
+- '**./initial-scene-settings.txt**': **custom initial scene settings** for some of our tasks, in the '**['index','task','object', ... ,'actionable_property']**' format (https://ai2thor.allenai.org/ithor/documentation/objects/actionable-properties/)
 - '**./keyboard-control.png**': **keyboard control guide** displayed for users in our annotation program
 - '**./tasks**': folder containing the **tasks for each collection instance**, and is **used by our annotation program** to track progress and display related information during task annotation
 
