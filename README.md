@@ -6,7 +6,7 @@ Each **data file** has the naming convention of '_./dataset/{collection_instance
 - The **first list** shows the **task** and the **floor plan**
 - The **second list** shows the **actions taken to complete the task**
 
-The '_./dataset/resources/task_descriptions_' folder contains the **task descriptions of the tasks for each collection instance**.
+The '_./dataset/resources/task_descriptions_' folder contains the **descriptions of the tasks for each collection instance**.
 
 The '_./dataset/resources/user_tasks_' folder contains the **collection instances and tasks that each user is in charge of**.
 
