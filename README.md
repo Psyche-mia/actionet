@@ -21,7 +21,7 @@ Tasks sorted by complexity (number of steps taken):
 
 Number of tasks: 63
 
-Number of task instances: 3038
+Number of instances: 3038
 
 Max number of actions: 878
 
@@ -42,7 +42,9 @@ Tasks sorted by complexity (number of steps taken):
 
 Number of tasks: 26
 
-Number of task instances: 1314
+Number of instances: 1314
+
+Number of instances by task: {'Boil water with a kettle': 51, 'Hide the egg': 47, 'Keep kitchen utensils inside drawer': 61, 'Make coffee': 60, 'Make tomato soup': 60, 'Boil water with pot': 54, 'Fry an egg': 55, 'Wash Dishes': 53, 'Prepare sliced apple': 52, 'Toast a bread': 50, 'Pour away coffee in a cup': 53, 'Throw away cracked egg': 50, 'Pour wine into a cup': 53, 'Clear the fridge': 51, 'Fill up cup with water': 51, 'Make lettuce soup': 59, 'Throw away unused apple slice': 51, 'Off kitchen light': 49, 'Microwave the sliced potato': 52, 'Pour away water from pot': 51, 'Boil Potato': 54, 'Store food into fridge': 51, 'Find the egg in the room': 47, 'Make a breakfast': 48, 'Wash all the utensils': 49}
 
 Max number of actions: 673
 
@@ -62,7 +64,9 @@ Tasks sorted by complexity (number of steps taken):
 
 Number of tasks: 18
 
-Number of task instances: 794
+Number of instances: 794
+
+Number of instances by task: {'Keep valuable items in safe': 21, 'Turn off the living room light': 49, 'Keep box inside safe': 20, 'Crack the window': 54, 'Light up one candle with another': 12, 'Water the houseplant': 60, 'Keep the laptop': 24, 'Turn off the table lamp or desk lamp': 50, 'Pack things into the box': 56, 'Throw away used tissuebox': 50, 'Clear the sofa': 48, 'Check the timing on the watch': 50, 'Crack the handphone screen': 51, 'Use laptop': 52, 'Read a book': 50, 'Use the handphone': 50, 'Watch television': 53, 'Turn on all the floor lamp': 44}
 
 Max number of actions: 878
 
@@ -82,7 +86,9 @@ Tasks sorted by complexity (number of steps taken):
 
 Number of tasks: 10
 
-Number of task instances: 404
+Number of instances: 404
+
+Number of instances by task: {'Collect dirty cloths': 23, 'Close the blinds': 46, 'Clean the bed': 51, 'Keep sporting equipment': 50, 'Clear the bed': 49, 'Turn off all the bedroom light': 48, 'Open Blinds': 45, 'Break the mirror': 51, 'Keep valuable items in safe': 31, 'Keep box inside safe': 10}
 
 Max number of actions: 795
 
@@ -102,7 +108,9 @@ Tasks sorted by complexity (number of steps taken):
 
 Number of tasks: 11
 
-Number of task instances: 526
+Number of instances: 526
+
+Number of instances by task: {'Throw away used toilet roll and soap bottle': 49, 'Hand towel on towelholder': 45, 'Put off a candle': 49, 'Close the shower curtain': 44, 'Break shower glass': 50, 'sink towel in water': 52, 'Fill the sink with water': 47, 'Turn on shower head': 47, 'Clean the mirror': 53, 'Fill up the bathtub with water': 45, 'Wash dirty cloths': 45}
 
 Max number of actions: 230
 
