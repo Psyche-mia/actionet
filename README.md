@@ -31,7 +31,7 @@ Mean number of actions: 70.5
 
 Standard deviation for actions: 78.3
 
-Mean length of mid-level tasks: 2.22
+Mean length of mid-level tasks: 2.2
 
 ### By Room Category
 #### Kitchen
