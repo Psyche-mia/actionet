@@ -128,7 +128,7 @@ Our **annotation program** can be found in the '**./annotate**' folder.
 
 It can be **run** by running the '**./annotate/gui.py**' file.
 
-We have **made changes** to the '**allenai/ai2thor/unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs**' file in AI2-THOR to better suit our requirements, and the edited file is '**./annotate/PhysicsRemoteFPSAgentController.cs**' (https://github.com/allenai/ai2thor).
+We have **made changes** to the '**allenai/ai2thor/unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs**' file in AI2-THOR to allow for the customisation of initial scene settings (eg. object state) for some tasks, and the edited file is '**./annotate/PhysicsRemoteFPSAgentController.cs**' (https://github.com/allenai/ai2thor).
 
 In the '**./annotate/resources**' folder, we have:
 - '**./demo.mp4**': **tutorial video** displayed for users in our annotation program
